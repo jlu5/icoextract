@@ -2,6 +2,7 @@
 Windows PE EXE icon extractor.
 """
 
+import io
 import pefile
 import sys
 import struct
@@ -78,6 +79,7 @@ class IconExtractor():
         group_icons = self._get_group_icon_entries()
         icon_images = self._get_icon_data([g.ID for g in group_icons])
         icons = list(zip(group_icons, icon_images))
+        assert len(group_icons) == len(icon_images)
         fd.write(b"\x00\x00") # 2 reserved bytes
         fd.write(struct.pack("<H", 1)) # 0x1 (little endian) specifying that this is an .ICO image
         fd.write(struct.pack("<H", len(icons)))  # number of images
