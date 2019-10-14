@@ -55,18 +55,20 @@ class IconExtractor():
 
         return grp_icons
 
-    def _get_icons(self):
+    def _get_icons(self, icon_ids):
         """
         Return a list of RT_ICON entries: pointers to the actual image data.
         """
         icons = []
         for idx, icon_entry_list in enumerate(self.rticonres.directory.entries):
-            icon_entry = icon_entry_list.directory.entries[0]
 
-            resource_offset = icon_entry.data.struct.OffsetToData
-            size = icon_entry.data.struct.Size
-            data = self._pe.get_memory_mapped_image()[resource_offset:resource_offset+size]
-            icons.append(data)
+            if icon_entry_list.id in icon_ids:
+                icon_entry = icon_entry_list.directory.entries[0]  # Select first language
+                resource_offset = icon_entry.data.struct.OffsetToData
+                size = icon_entry.data.struct.Size
+                data = self._pe.get_memory_mapped_image()[resource_offset:resource_offset+size]
+                print(f"Exported icon with ID {icon_entry_list.id}: {icon_entry.struct}")
+                icons.append(data)
         return icons
 
     def _write_icons(self, fd):
@@ -74,8 +76,7 @@ class IconExtractor():
         Writes ICO data to a file descriptor.
         """
         group_icons = self._get_group_icons()
-        icon_images = self._get_icons()
-        assert len(group_icons) == len(icon_images)
+        icon_images = self._get_icons([g.ID for g in group_icons])
         icons = list(zip(group_icons, icon_images))
         fd.write(b"\x00\x00") # 2 reserved bytes
         fd.write(struct.pack("<H", 1)) # 0x1 (little endian) specifying that this is an .ICO image
