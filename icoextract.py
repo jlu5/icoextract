@@ -105,7 +105,7 @@ class IconExtractor():
         with open(fname, 'wb') as f:
             self._write_ico(f)
 
-    def get_icon(self, fname):
+    def get_icon(self):
         """
         Returns ICO data as a BytesIO() instance, containing the program icon of the input executable.
         """
