@@ -26,9 +26,9 @@ class IconExtractor():
         self.groupiconres = resources.get(pefile.RESOURCE_TYPE["RT_GROUP_ICON"])
         self.rticonres = resources.get(pefile.RESOURCE_TYPE["RT_ICON"])
 
-    def _get_group_icons(self):
+    def _get_group_icon_entries(self):
         """
-        Returns a list of logical icon entries in present the file.
+        Returns the group icon entries for the first group icon in the executable.
         """
         groupicon = self.groupiconres
         while groupicon.struct.DataIsDirectory:
@@ -55,9 +55,9 @@ class IconExtractor():
 
         return grp_icons
 
-    def _get_icons(self, icon_ids):
+    def _get_icon_data(self, icon_ids):
         """
-        Return a list of RT_ICON entries: pointers to the actual image data.
+        Return a list of raw icon images corresponding to the icon IDs given.
         """
         icons = []
         for idx, icon_entry_list in enumerate(self.rticonres.directory.entries):
@@ -71,12 +71,12 @@ class IconExtractor():
                 icons.append(data)
         return icons
 
-    def _write_icons(self, fd):
+    def _write_ico(self, fd):
         """
         Writes ICO data to a file descriptor.
         """
-        group_icons = self._get_group_icons()
-        icon_images = self._get_icons([g.ID for g in group_icons])
+        group_icons = self._get_group_icon_entries()
+        icon_images = self._get_icon_data([g.ID for g in group_icons])
         icons = list(zip(group_icons, icon_images))
         fd.write(b"\x00\x00") # 2 reserved bytes
         fd.write(struct.pack("<H", 1)) # 0x1 (little endian) specifying that this is an .ICO image
@@ -98,19 +98,19 @@ class IconExtractor():
             group_icon, icon_data = datapair
             fd.write(icon_data)
 
-    def export_icons(self, fname):
+    def export_icon(self, fname):
         """
         Writes ICO data containing the program icon of the input executable.
         """
         with open(fname, 'wb') as f:
-            self._write_icons(f)
+            self._write_ico(f)
 
-    def get_icons(self, fname):
+    def get_icon(self, fname):
         """
         Returns ICO data as a BytesIO() instance, containing the program icon of the input executable.
         """
         f = io.BytesIO()
-        self._write_icons(f)
+        self._write_ico(f)
         return f
 
 if __name__ == '__main__':
@@ -122,4 +122,4 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     extractor = IconExtractor(args.input)
-    extractor.export_icons(args.output)
+    extractor.export_icon(args.output)
