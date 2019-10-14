@@ -116,8 +116,9 @@ if __name__ == '__main__':
     import argparse
 
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("input", help="input filename")
+    parser.add_argument("output", help="output filename")
+    args = parser.parse_args()
 
-    fname = sys.argv[1]
-    outfname = fname + '.ico'
-    extractor = IconExtractor(fname)
-    extractor.export_icons(outfname)
+    extractor = IconExtractor(args.input)
+    extractor.export_icons(args.output)
