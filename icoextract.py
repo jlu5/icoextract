@@ -64,15 +64,16 @@ class IconExtractor():
         Return a list of raw icon images corresponding to the icon IDs given.
         """
         icons = []
-        for idx, icon_entry_list in enumerate(self.rticonres.directory.entries):
+        icon_entry_lists = {icon_entry_list.id: icon_entry_list for icon_entry_list in self.rticonres.directory.entries}
+        for icon_id in icon_ids:
+            icon_entry_list = icon_entry_lists[icon_id]
 
-            if icon_entry_list.id in icon_ids:
-                icon_entry = icon_entry_list.directory.entries[0]  # Select first language
-                resource_offset = icon_entry.data.struct.OffsetToData
-                size = icon_entry.data.struct.Size
-                data = self._pe.get_memory_mapped_image()[resource_offset:resource_offset+size]
-                print(f"Exported icon with ID {icon_entry_list.id}: {icon_entry.struct}")
-                icons.append(data)
+            icon_entry = icon_entry_list.directory.entries[0]  # Select first language
+            resource_offset = icon_entry.data.struct.OffsetToData
+            size = icon_entry.data.struct.Size
+            data = self._pe.get_memory_mapped_image()[resource_offset:resource_offset+size]
+            print(f"Exported icon with ID {icon_entry_list.id}: {icon_entry.struct}")
+            icons.append(data)
         return icons
 
     def _write_ico(self, fd):
