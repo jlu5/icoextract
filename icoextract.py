@@ -27,7 +27,7 @@ class IconExtractor():
         self.groupiconres = resources.get(pefile.RESOURCE_TYPE["RT_GROUP_ICON"])
         self.rticonres = resources.get(pefile.RESOURCE_TYPE["RT_ICON"])
 
-    def _get_group_icon_entries(self, minsize=32):
+    def _get_group_icon_entries(self):
         """
         Returns the group icon entries for the first group icon in the executable.
         """
@@ -51,11 +51,8 @@ class IconExtractor():
         for idx in range(grp_icon_dir.Count):
             grp_icon = self._pe.__unpack_data__(GRPICONDIRENTRY_FORMAT, data[icon_offset:], file_offset+icon_offset)
             icon_offset += grp_icon.sizeof()
-            if (grp_icon.Width or 256) >= minsize:
-                print("Got logical group icon", grp_icon)
-                grp_icons.append(grp_icon)
-            else:
-                print("Skipped logical group icon", grp_icon)
+            grp_icons.append(grp_icon)
+            print("Got logical group icon", grp_icon)
 
         return grp_icons
 
