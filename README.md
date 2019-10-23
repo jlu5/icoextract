@@ -1,6 +1,6 @@
 # icoextract
 
-A pure Python icon extractor for Windows PE files (.exe/.dll). Inspired by [firodj/extract-icon-py](https://github.com/firodj/extract-icon-py), [icoutils](https://www.nongnu.org/icoutils/), and others.
+A pure Python icon extractor for Windows PE files (.exe/.dll). Inspired by [extract-icon-py](https://github.com/firodj/extract-icon-py), [icoutils](https://www.nongnu.org/icoutils/), and others.
 
 ## Goals
 
