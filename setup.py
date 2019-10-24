@@ -25,5 +25,5 @@ setup(
     package_dir={"icoextract": "src"},
 
     # Executable scripts
-    scripts=["icoextract", "exe-thumbnailer"],
+    scripts=["icoextract", "icolist", "exe-thumbnailer"],
 )

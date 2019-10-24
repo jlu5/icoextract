@@ -35,6 +35,13 @@ class IconExtractor():
         self.groupiconres = resources.get(pefile.RESOURCE_TYPE["RT_GROUP_ICON"])
         self.rticonres = resources.get(pefile.RESOURCE_TYPE["RT_ICON"])
 
+    def list_group_icons(self):
+        """
+        Returns a list of group icon entries.
+        """
+        return [(e.struct.Name, e.struct.OffsetToData)
+                for e in self.groupiconres.directory.entries]
+
     def _get_group_icon_entries(self, num=0):
         """
         Returns the group icon entries for the specified group icon in the executable.
