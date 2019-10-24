@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 """
 Linux (freedesktop.org) thumbnailer for Windows PE files (.exe/.dll)
-
-This takes in one argument: input file (%u), input URI (%i)
 """
 import icoextract
 import argparse
@@ -16,41 +14,42 @@ from gi.repository import GLib
 
 from PIL import Image
 
-def main(inputfile, uri):
-    print("Got args:", sys.argv)
-    thumb_hash = hashlib.md5(uri.encode('utf-8')).hexdigest().lower()
-    basedir = pathlib.Path(GLib.get_user_cache_dir()) / "thumbnails"
+logger = icoextract.logger
 
-    im = None
+def main(inputfile, outfile, large_size=True):
+    """
+    Generates a thumbnail for an .exe file.
 
+    inputfile: the input file path (%i)
+    outfile: output filename (%o)
+    large_size: determines whether to write a large size (256x256) thumbnail (%s)
+    """
     extractor = icoextract.IconExtractor(inputfile)
     data = extractor.get_icon()
 
     im = Image.open(data)  # Open up the .ico from memory
-    # Write a large icon if available
     if (256, 256) in im.info['sizes']:
-        outdir = basedir / "large"
-        os.makedirs(outdir, mode=0o700, exist_ok=True)
-        outfile = outdir / (thumb_hash + '.png')
-        print("Writing large size thumbnail to", outfile)
-        im.save(outfile)
+        if large_size:
+            # A large size thumbnail was requested
+            logger.debug("Writing large size thumbnail to %s", outfile)
+            im.save(outfile, "PNG")
+            return
 
-        # But also write a normal size icon in all cases - downscale to 128x128 per
-        # https://specifications.freedesktop.org/thumbnail-spec/thumbnail-spec-latest.html
-        # "Normal: The default place for storing thumbnails. The image size must not exceed 128x128 pixel."
-        # Only some file managers (e.g. Caja) will show a thumbnail if only the large one exists?
+        # If large size thumbnail wasn't requested but one is available,
+        # scale it down to 128x128. This is the largest resolution allowed
+        # for "normal" size thumbnails.
         im.resize((128, 128))
 
-    outdir = basedir / "normal"
-    os.makedirs(outdir, mode=0o700, exist_ok=True)
-    outfile = outdir / (thumb_hash + '.png')
-    print("Writing normal size thumbnail to", outfile)
-    im.save(outfile)   # Convert it to a PNG
+    outfile = outfile or _get_outfile(uri, large_size=True)
+    logger.debug("Writing normal size thumbnail to %s", outfile)
+    im.save(outfile, "PNG")
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("-s", "--size", type=int, help="size of desired thumbnail", default=256)
     parser.add_argument("inputfile", help="input file name")
-    parser.add_argument("uri", help="input URI")
+    parser.add_argument("outfile", help="output file name", nargs='?')
     args = parser.parse_args()
 
-    main(args.inputfile, args.uri)
+    large_size = (args.size >= 256)
+    main(args.inputfile, args.outfile, large_size)
