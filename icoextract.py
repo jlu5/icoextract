@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """
 Windows PE EXE icon extractor.
 """
@@ -27,13 +28,13 @@ class IconExtractor():
         self.groupiconres = resources.get(pefile.RESOURCE_TYPE["RT_GROUP_ICON"])
         self.rticonres = resources.get(pefile.RESOURCE_TYPE["RT_ICON"])
 
-    def _get_group_icon_entries(self):
+    def _get_group_icon_entries(self, num=0):
         """
-        Returns the group icon entries for the first group icon in the executable.
+        Returns the group icon entries for the specified group icon in the executable.
         """
-        groupicon = self.groupiconres
-        while groupicon.struct.DataIsDirectory:
-            # Select the first icon and language from subfolders as needed.
+        groupicon = self.groupiconres.directory.entries[num]
+        if groupicon.struct.DataIsDirectory:
+            # Select the first language from subfolders as needed.
             groupicon = groupicon.directory.entries[0]
 
         # Read the data pointed to by the group icon directory (GRPICONDIR) struct.
@@ -73,11 +74,11 @@ class IconExtractor():
             icons.append(data)
         return icons
 
-    def _write_ico(self, fd):
+    def _write_ico(self, fd, num=0):
         """
         Writes ICO data to a file descriptor.
         """
-        group_icons = self._get_group_icon_entries()
+        group_icons = self._get_group_icon_entries(num=num)
         icon_images = self._get_icon_data([g.ID for g in group_icons])
         icons = list(zip(group_icons, icon_images))
         assert len(group_icons) == len(icon_images)
@@ -101,28 +102,29 @@ class IconExtractor():
             group_icon, icon_data = datapair
             fd.write(icon_data)
 
-    def export_icon(self, fname):
+    def export_icon(self, fname, num=0):
         """
         Writes ICO data containing the program icon of the input executable.
         """
         with open(fname, 'wb') as f:
-            self._write_ico(f)
+            self._write_ico(f, num=num)
 
-    def get_icon(self):
+    def get_icon(self, num=0):
         """
         Returns ICO data as a BytesIO() instance, containing the program icon of the input executable.
         """
         f = io.BytesIO()
-        self._write_ico(f)
+        self._write_ico(f, num=num)
         return f
 
 if __name__ == '__main__':
     import argparse
 
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("-n", "--num", type=int, help="index of icon to extract", default=0)
     parser.add_argument("input", help="input filename")
     parser.add_argument("output", help="output filename")
     args = parser.parse_args()
 
     extractor = IconExtractor(args.input)
-    extractor.export_icon(args.output)
+    extractor.export_icon(args.output, num=args.num)
