@@ -14,7 +14,7 @@ GRPICONDIRENTRY_FORMAT = ('GRPICONDIRENTRY',
      'H,Planes','H,BitCount','I,BytesInRes','H,ID'))
 GRPICONDIR_FORMAT = ('GRPICONDIR', ('H,Reserved', 'H,Type','H,Count'))
 
-log = logging.getLogger("icoextract")
+logger = logging.getLogger("icoextract")
 logging.basicConfig()
 
 class IconExtractor():
@@ -51,7 +51,7 @@ class IconExtractor():
         file_offset = self._pe.get_offset_from_rva(resource_offset)
 
         grp_icon_dir = self._pe.__unpack_data__(GRPICONDIR_FORMAT, data, file_offset)
-        log.debug(grp_icon_dir)
+        logger.debug(grp_icon_dir)
 
         # For each group icon entry (GRPICONDIRENTRY) that immediately follows, read its data and save it.
         grp_icons = []
@@ -60,7 +60,7 @@ class IconExtractor():
             grp_icon = self._pe.__unpack_data__(GRPICONDIRENTRY_FORMAT, data[icon_offset:], file_offset+icon_offset)
             icon_offset += grp_icon.sizeof()
             grp_icons.append(grp_icon)
-            log.debug("Got logical group icon %s", grp_icon)
+            logger.debug("Got logical group icon %s", grp_icon)
 
         return grp_icons
 
@@ -77,7 +77,7 @@ class IconExtractor():
             resource_offset = icon_entry.data.struct.OffsetToData
             size = icon_entry.data.struct.Size
             data = self._pe.get_memory_mapped_image()[resource_offset:resource_offset+size]
-            log.debug(f"Exported icon with ID {icon_entry_list.id}: {icon_entry.struct}")
+            logger.debug(f"Exported icon with ID {icon_entry_list.id}: {icon_entry.struct}")
             icons.append(data)
         return icons
 
@@ -123,19 +123,3 @@ class IconExtractor():
         f = io.BytesIO()
         self._write_ico(f, num=num)
         return f
-
-if __name__ == '__main__':
-    import argparse
-
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("-n", "--num", type=int, help="index of icon to extract", default=0)
-    parser.add_argument("-v", "--verbose", action="store_true", help="enables debug logging")
-    parser.add_argument("input", help="input filename")
-    parser.add_argument("output", help="output filename")
-    args = parser.parse_args()
-
-    if args.verbose:
-        log.setLevel(logging.DEBUG)
-
-    extractor = IconExtractor(args.input)
-    extractor.export_icon(args.output, num=args.num)
