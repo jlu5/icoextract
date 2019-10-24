@@ -21,6 +21,9 @@ class IconExtractor():
         self._pe = pefile.PE(filename, fast_load=True)
         self._pe.parse_data_directories(pefile.DIRECTORY_ENTRY['IMAGE_DIRECTORY_ENTRY_RESOURCE'])
 
+        if not hasattr(self._pe, 'DIRECTORY_ENTRY_RESOURCE'):
+            raise RuntimeError(f"{filename} has no icon resources")
+
         # Reverse the list of entries before making the mapping so that earlier values take precedence
         # When an executable includes multiple icon resources, we should use only the first one.
         resources = {rsrc.id: rsrc for rsrc in reversed(self._pe.DIRECTORY_ENTRY_RESOURCE.entries)}
