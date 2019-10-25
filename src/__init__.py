@@ -52,10 +52,10 @@ class IconExtractor():
             groupicon = groupicon.directory.entries[0]
 
         # Read the data pointed to by the group icon directory (GRPICONDIR) struct.
-        resource_offset = groupicon.data.struct.OffsetToData
+        rva = groupicon.data.struct.OffsetToData
         size = groupicon.data.struct.Size
-        data = self._pe.get_memory_mapped_image()[resource_offset:resource_offset+size]
-        file_offset = self._pe.get_offset_from_rva(resource_offset)
+        data = self._pe.get_data(rva, size)
+        file_offset = self._pe.get_offset_from_rva(rva)
 
         grp_icon_dir = self._pe.__unpack_data__(GRPICONDIR_FORMAT, data, file_offset)
         logger.debug(grp_icon_dir)
@@ -81,9 +81,9 @@ class IconExtractor():
             icon_entry_list = icon_entry_lists[icon_id]
 
             icon_entry = icon_entry_list.directory.entries[0]  # Select first language
-            resource_offset = icon_entry.data.struct.OffsetToData
+            rva = icon_entry.data.struct.OffsetToData
             size = icon_entry.data.struct.Size
-            data = self._pe.get_memory_mapped_image()[resource_offset:resource_offset+size]
+            data = self._pe.get_data(rva, size)
             logger.debug(f"Exported icon with ID {icon_entry_list.id}: {icon_entry.struct}")
             icons.append(data)
         return icons
