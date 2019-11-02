@@ -48,6 +48,7 @@ def main(inputfile, outfile, large_size=True):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("-V", "--version", action='version', version=f'exe-thumbnailer, part of icoextract {icoextract.__version__}')
     parser.add_argument("-s", "--size", type=int, help="size of desired thumbnail", default=256)
     parser.add_argument("-v", "--verbose", action="store_true", help="enables debug logging")
     parser.add_argument("inputfile", help="input file name")

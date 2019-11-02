@@ -17,6 +17,12 @@ GRPICONDIR_FORMAT = ('GRPICONDIR', ('H,Reserved', 'H,Type','H,Count'))
 logger = logging.getLogger("icoextract")
 logging.basicConfig()
 
+try:
+    from .version import __version__
+except ImportError:
+    __version__ = 'unknown'
+    logger.info('icoextract: failed to read program version')
+
 class IconExtractor():
     def __init__(self, filename):
         self.filename = filename

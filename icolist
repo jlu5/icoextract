@@ -4,12 +4,13 @@ Lists group icons present in a program.
 """
 import logging
 
-from icoextract import IconExtractor, logger
+from icoextract import IconExtractor, logger, __version__
 
 if __name__ == '__main__':
     import argparse
 
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("-V", "--version", action='version', version=f'icoextract {__version__}')
     parser.add_argument("-v", "--verbose", action="store_true", help="enables debug logging")
     parser.add_argument("input", help="input filename")
     args = parser.parse_args()
