@@ -2,3 +2,4 @@ tmp*.*
 testapp.ico
 testapp*.res
 *.exe
+testapp.rc

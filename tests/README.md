@@ -1,6 +1,6 @@
 ## Tests for icoextract
 
-To compile these tests you need MinGW and imagemagick. On Debian/Ubuntu this is `apt install mingw-w64 imagemagick`.
+To compile these tests you need MinGW and imagemagick. On Debian/Ubuntu this is `apt install gcc-mingw-w64 imagemagick`.
 
 ```bash
 make
