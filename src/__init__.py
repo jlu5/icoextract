@@ -23,6 +23,9 @@ except ImportError:
     __version__ = 'unknown'
     logger.info('icoextract: failed to read program version')
 
+class NoIconsAvailableError(Exception):
+    pass
+
 class IconExtractor():
     def __init__(self, filename):
         self.filename = filename
@@ -32,13 +35,15 @@ class IconExtractor():
         self._pe.parse_data_directories(pefile.DIRECTORY_ENTRY['IMAGE_DIRECTORY_ENTRY_RESOURCE'])
 
         if not hasattr(self._pe, 'DIRECTORY_ENTRY_RESOURCE'):
-            raise RuntimeError(f"{filename} has no icon resources")
+            raise NoIconsAvailableError(f"{filename} has no resources")
 
         # Reverse the list of entries before making the mapping so that earlier values take precedence
         # When an executable includes multiple icon resources, we should use only the first one.
         resources = {rsrc.id: rsrc for rsrc in reversed(self._pe.DIRECTORY_ENTRY_RESOURCE.entries)}
 
         self.groupiconres = resources.get(pefile.RESOURCE_TYPE["RT_GROUP_ICON"])
+        if not self.groupiconres:
+            raise NoIconsAvailableError(f"{filename} has no group icon resources")
         self.rticonres = resources.get(pefile.RESOURCE_TYPE["RT_ICON"])
 
     def list_group_icons(self):
