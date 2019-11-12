@@ -14,10 +14,12 @@ class UtilsTestCase(unittest.TestCase):
 
         self.assertTrue(filecmp.cmp(outfile, target),
                         f"{outfile} and {target} should be equal")
+        return ie
 
     # App has icon + version resource
     def test_testapp64(self):
-        self._test_extract("testapp64.exe", "testapp.ico")
+        ie = self._test_extract("testapp64.exe", "testapp.ico")
+        self.assertEqual(len(ie.list_group_icons()), 1)
 
     # App has only version resource
     def test_testapp64_noicon(self):
@@ -30,7 +32,8 @@ class UtilsTestCase(unittest.TestCase):
             self._test_extract("testapp64-nores.exe", "testapp-nores.ico")
 
     def test_testapp32(self):
-        self._test_extract("testapp32.exe", "testapp.ico")
+        ie = self._test_extract("testapp32.exe", "testapp.ico")
+        self.assertEqual(len(ie.list_group_icons()), 1)
 
     def test_testapp32_noicon(self):
         with self.assertRaises(icoextract.NoIconsAvailableError):
