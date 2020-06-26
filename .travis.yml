@@ -20,6 +20,7 @@ addons:
 script:
   - cd tests/ && make
   - python -m unittest discover . --verbose
+  - cd ..  # otherwise deploy stage fails
 
 deploy:
   provider: pypi
