@@ -5,9 +5,10 @@ Windows PE EXE icon extractor.
 
 import io
 import logging
-import pefile
 import sys
 import struct
+
+import pefile
 
 GRPICONDIRENTRY_FORMAT = ('GRPICONDIRENTRY',
     ('B,Width', 'B,Height','B,ColorCount','B,Reserved',
