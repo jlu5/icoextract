@@ -24,6 +24,12 @@ mkdir -p ~/.local/share/thumbnailers/
 cp exe-thumbnailer.thumbnailer ~/.local/share/thumbnailers/
 ```
 
+## Usage
+
+```cmd
+python extract.py <some-program.exe> <destination-icon.ico> 
+```
+
 ## Goals
 
 This project aims to be:
