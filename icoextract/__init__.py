@@ -142,3 +142,5 @@ class IconExtractor():
         f = io.BytesIO()
         self._write_ico(f, num=num)
         return f
+
+__all__ = ['IconExtractor']
