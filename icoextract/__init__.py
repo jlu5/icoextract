@@ -24,7 +24,11 @@ except ImportError:
     __version__ = 'unknown'
     logger.info('icoextract: failed to read program version')
 
-class NoIconsAvailableError(Exception):
+class IconExtractorError(Exception):
+    pass
+class NoIconsAvailableError(IconExtractorError):
+    pass
+class InvalidIconDefinitionError(IconExtractorError):
     pass
 
 class IconExtractor():
@@ -71,6 +75,9 @@ class IconExtractor():
 
         grp_icon_dir = self._pe.__unpack_data__(GRPICONDIR_FORMAT, data, file_offset)
         logger.debug(grp_icon_dir)
+
+        if grp_icon_dir.Reserved:
+            raise InvalidIconDefinitionError("Invalid group icon definition (got Reserved=%s instead of 0)" % hex(grp_icon_dir.Reserved))
 
         # For each group icon entry (GRPICONDIRENTRY) that immediately follows, read its data and save it.
         grp_icons = []
