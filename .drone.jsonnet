@@ -42,8 +42,7 @@ local test_with(version, do_deploy=false) = {
                     username: "__token__",
                     password: {
                         "from_secret": "pypi_token"
-                    },
-                    repository: "https://test.pypi.org/legacy/",
+                    }
                 },
                 when: {
                     event: ["tag"],
