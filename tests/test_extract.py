@@ -1,19 +1,26 @@
 #!/usr/bin/env python3
 
 import filecmp
+import os.path
 import unittest
 
 import icoextract
 
 class UtilsTestCase(unittest.TestCase):
     def _test_extract(self, infile, target):
-        ie = icoextract.IconExtractor(infile)
+        # Read/write test files in tests/ folder, regardless of where working directory is
+        tests_dir = os.path.dirname(__file__)
+        inpath = os.path.join(tests_dir, infile)
+        target = os.path.join(tests_dir, target)
+
+        ie = icoextract.IconExtractor(inpath)
 
         outfile = f"tmp-{infile}.ico"
-        ie.export_icon(outfile)
+        outpath = os.path.join(tests_dir, outfile)
+        ie.export_icon(outpath)
 
-        self.assertTrue(filecmp.cmp(outfile, target),
-                        f"{outfile} and {target} should be equal")
+        self.assertTrue(filecmp.cmp(outpath, target),
+                        f"{outpath} and {target} should be equal")
         return ie
 
     # App has icon + version resource
