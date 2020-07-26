@@ -16,7 +16,6 @@ BLOCK "StringFileInfo"
 		VALUE "ProductName", "icoextract"
 		VALUE "OriginalFilename", "testapp.exe"
 		VALUE "ProductVersion", "0.1.0"
-		VALUE "LegalCopyright", "(c) 2019 The icoextract authors"
 	}
 }
 
