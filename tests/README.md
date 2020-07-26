@@ -7,4 +7,4 @@ make
 python3 test_icoextract.py
 ```
 
-The icon file is sourced from the [Tango icon theme](http://tango-project.org/) (public domain).
+The icon file (`testapp.png`) is sourced from the public domain [Tango icon theme](http://tango-project.org/) (`internet-web-browser.svg`).
