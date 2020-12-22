@@ -43,13 +43,16 @@ setup(
 
     packages=find_packages(),
     install_requires=['pefile'],
+    extras_require={
+        "thumbnailer": ["Pillow"]
+    },
 
     # Executable scripts
     entry_points={
         'console_scripts': [
             'icoextract = icoextract.scripts.extract:main',
             'icolist = icoextract.scripts.icolist:main',
-            'exe-thumbnailer = icoextract.scripts.thumbnailer:main',
+            'exe-thumbnailer = icoextract.scripts.thumbnailer:main [thumbnailer]',
         ],
     },
 )
