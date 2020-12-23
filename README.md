@@ -12,7 +12,7 @@ icoextract aims to be:
 
 ## Installation
 
-You can install the project via pip: `pip3 install icoextract`
+You can install the project via pip: `pip3 install icoextract[thumbnailer]`
 
 On Linux, you can optionally install the thumbnailer by copying [`exe-thumbnailer.thumbnailer`](/exe-thumbnailer.thumbnailer) into `/usr/local/share/thumbnailers/`
 
