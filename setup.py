@@ -1,23 +1,16 @@
 #!/usr/bin/env python3
 
-import sys
 from setuptools import setup, find_packages
-
-if sys.version_info < (3, 6):
-    raise RuntimeError("icoextract requires Python 3.6 or higher.")
 
 with open ('icoextract/version.py') as f:
     exec(f.read())
-
-with open('README.md', 'r') as f:
-    long_description = f.read()
 
 setup(
     name="icoextract",
     description="Windows PE EXE icon extractor",
     version=__version__,
-    long_description=long_description,
-    long_description_content_type='text/markdown',
+    # long_description=long_description,
+    # long_description_content_type='text/markdown',
 
     url="https://github.com/jlu5/icoextract",
 
