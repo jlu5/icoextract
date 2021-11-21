@@ -60,6 +60,7 @@ local test_with(version, do_deploy=false) = {
 [
     test_with("3.6"),
     test_with("3.7"),
-    test_with("3.8", do_deploy=true),
-    test_with("3.9")
+    test_with("3.8"),
+    test_with("3.9"),
+    test_with("3.10", do_deploy=true)
 ]
