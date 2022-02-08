@@ -33,10 +33,15 @@ def generate_thumbnail(inputfile, outfile, large_size=True):
             im.save(outfile, "PNG")
             return
 
-        # If large size thumbnail wasn't requested but one is available,
-        # scale it down to 128x128. This is the largest resolution allowed
-        # for "normal" size thumbnails.
-        im.resize((128, 128))
+        # If large size thumbnail wasn't requested but one is available, pick an 128x128 icon if available;
+        # otherwise scale down from 256x256 to 128x128. 128x128 is the largest resolution allowed for
+        # "normal" size thumbnails.
+        if (128, 128) in im.info['sizes']:
+            logger.debug("Using native 128x128 icon")
+            im.size = (128, 128)
+        else:
+            logger.debug("Resizing icon from 256x256 to 128x128")
+            im = im.resize((128, 128))
 
     logger.debug("Writing normal size thumbnail for %s to %s", inputfile, outfile)
     im.save(outfile, "PNG")
