@@ -1,5 +1,5 @@
 tmp*.*
-testapp.ico
+*.ico
 testapp*.res
 *.exe
 testapp.rc
