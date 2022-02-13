@@ -16,7 +16,7 @@ local test_with(version, do_deploy=false) = {
         std.prune([
             {
                 name: "install",
-                image: "python:" + version + "-buster",
+                image: "python:" + version + "-bullseye",
                 commands: [
                     "pip install -r requirements.txt",
                     "python setup.py install"
@@ -25,7 +25,7 @@ local test_with(version, do_deploy=false) = {
             },
             {
                 name: "test",
-                image: "python:" + version + "-buster",
+                image: "python:" + version + "-bullseye",
                 commands: [
                     "apt-get update",
                     "apt-get install -yy imagemagick gcc-mingw-w64 make",
