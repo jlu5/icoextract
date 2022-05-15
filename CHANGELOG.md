@@ -7,7 +7,7 @@
 
 ## icoextract 0.1.1 (2020-07-01)
 
-- Refactor scripts to use setuptools entrypoints  adds Windows support to scripts
+- Refactor scripts to use setuptools entrypoints (adds Windows support)
 - Raise an error when seeing invalid icon definitions
 
 ## icoextract 0.1.0 (2019-11-22)
