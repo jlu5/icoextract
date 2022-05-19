@@ -33,7 +33,7 @@ setup(
         'Programming Language :: Python :: 3.10',
     ],
 
-    packages=find_packages(),
+    packages=find_packages(exclude=['tests']),
     install_requires=['pefile'],
     extras_require={
         "thumbnailer": ["Pillow"]
