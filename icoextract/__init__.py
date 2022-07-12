@@ -33,6 +33,12 @@ class InvalidIconDefinitionError(IconExtractorError):
 
 class IconExtractor():
     def __init__(self, filename=None, data=None):
+        """
+        Loads an executable from the given filename or data (raw bytes).
+        As with pefile, if both filename and data are given, filename takes precedence.
+
+        If the executable has contains no icons, this will raise NoIconsAvailableError.
+        """
         # Use fast loading and explicitly load the RESOURCE directory entry. This saves a LOT of time
         # on larger files
         self._pe = pefile.PE(name=filename, data=data, fast_load=True)
@@ -52,7 +58,7 @@ class IconExtractor():
 
     def list_group_icons(self):
         """
-        Returns a list of group icon entries.
+        Returns all group icon entries as a list of (name, offset) tuples.
         """
         return [(e.struct.Name, e.struct.OffsetToData)
                 for e in self.groupiconres.directory.entries]
@@ -136,14 +142,14 @@ class IconExtractor():
 
     def export_icon(self, fname, num=0):
         """
-        Writes ICO data containing the program icon of the input executable.
+        Writes ICO data of the requested group icon ID to fname.
         """
         with open(fname, 'wb') as f:
             self._write_ico(f, num=num)
 
     def get_icon(self, num=0):
         """
-        Returns ICO data as a BytesIO() instance, containing the program icon of the input executable.
+        Returns ICO data as a BytesIO() instance, containing the requested group icon ID.
         """
         f = io.BytesIO()
         self._write_ico(f, num=num)
