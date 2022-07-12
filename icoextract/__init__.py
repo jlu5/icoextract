@@ -32,15 +32,14 @@ class InvalidIconDefinitionError(IconExtractorError):
     pass
 
 class IconExtractor():
-    def __init__(self, filename):
-        self.filename = filename
+    def __init__(self, filename=None, data=None):
         # Use fast loading and explicitly load the RESOURCE directory entry. This saves a LOT of time
         # on larger files
-        self._pe = pefile.PE(filename, fast_load=True)
+        self._pe = pefile.PE(name=filename, data=data, fast_load=True)
         self._pe.parse_data_directories(pefile.DIRECTORY_ENTRY['IMAGE_DIRECTORY_ENTRY_RESOURCE'])
 
         if not hasattr(self._pe, 'DIRECTORY_ENTRY_RESOURCE'):
-            raise NoIconsAvailableError(f"{filename} has no resources")
+            raise NoIconsAvailableError("File has no resources")
 
         # Reverse the list of entries before making the mapping so that earlier values take precedence
         # When an executable includes multiple icon resources, we should use only the first one.
@@ -48,7 +47,7 @@ class IconExtractor():
 
         self.groupiconres = resources.get(pefile.RESOURCE_TYPE["RT_GROUP_ICON"])
         if not self.groupiconres:
-            raise NoIconsAvailableError(f"{filename} has no group icon resources")
+            raise NoIconsAvailableError("File has no group icon resources")
         self.rticonres = resources.get(pefile.RESOURCE_TYPE["RT_ICON"])
 
     def list_group_icons(self):

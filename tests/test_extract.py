@@ -50,5 +50,11 @@ class UtilsTestCase(unittest.TestCase):
         with self.assertRaises(icoextract.NoIconsAvailableError):
             self._test_extract("testapp32-nores.exe", "testapp-nores.ico")
 
+    def test_fd_as_input(self):
+        tests_dir = os.path.dirname(__file__)
+        with open(os.path.join(tests_dir, "testapp64.exe"), 'rb') as f:
+            ie = icoextract.IconExtractor(data=f.read())
+            self.assertEqual(len(ie.list_group_icons()), 1)
+
 if __name__ == '__main__':
     unittest.main()
