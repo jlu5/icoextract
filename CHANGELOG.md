@@ -1,5 +1,10 @@
 # Changelog
 
+## icoextract 0.1.4 (2022-08-08)
+
+- IconExtractor: support raw bytes as input, in addition to a filename
+- Refresh function descriptions
+
 ## icoextract 0.1.3 (2022-06-12)
 
 - Fix thumbnail resizing; use native 128x128 icons when available (GH-7)
