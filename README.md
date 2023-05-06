@@ -27,17 +27,9 @@ The thumbnailer should work with any file manager that implements the [Freedeskt
 
 ### Distribution packages
 
-icoextract is packaged in [various OS repositories](https://repology.org/project/python:icoextract/versions):
+You can install icoextract from any of these distribution repositories:
 
-- Arch Linux AUR: [icoextract](https://aur.archlinux.org/packages/icoextract)
-- Debian (11+): [icoextract](https://packages.debian.org/icoextract)
-- Fedora (36+): [python-icoextract](https://packages.fedoraproject.org/pkgs/python-icoextract/)
-- FreeBSD Ports: [misc/py-icoextract](https://www.freshports.org/misc/py-icoextract)
-- nixpkgs unstable: [python3.xx-icoextract](https://github.com/NixOS/nixpkgs/blob/nixos-unstable/pkgs/development/python-modules/icoextract/default.nix)
-- OpenMandriva: [python-icoextract](https://github.com/OpenMandrivaAssociation/python-icoextract/tree/rolling)
-- openSUSE Tumbleweed: [python-icoextract](https://build.opensuse.org/package/show/openSUSE:Factory/python-icoextract)
-- SlackBuilds (Slackware): [python/python3-icoextract](hhttps://slackbuilds.org/repository/15.0/python/python3-icoextract/)
-- Ubuntu (21.10+): [icoextract](https://packages.ubuntu.com/icoextract)
+[![Packaging status](https://repology.org/badge/vertical-allrepos/icoextract.svg)](https://repology.org/project/icoextract/versions)
 
 ## Usage
 
