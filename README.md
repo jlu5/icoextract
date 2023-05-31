@@ -2,7 +2,7 @@
 
 [![Build Status](https://drone.overdrivenetworks.com/api/badges/jlu5/icoextract/status.svg)](https://drone.overdrivenetworks.com/jlu5/icoextract)
 
-**icoextract** is an icon extractor for Windows PE files (.exe/.dll), written in Python. It also includes a thumbnailer script (`exe-thumbnailer`) for Linux desktops.
+**icoextract** is an icon extractor for Windows PE files (.exe/.dll/.mun), written in Python. It also includes a thumbnailer script (`exe-thumbnailer`) for Linux desktops.
 
 This project is inspired by [extract-icon-py](https://github.com/firodj/extract-icon-py), [icoutils](https://www.nongnu.org/icoutils/), and others.
 
@@ -33,7 +33,9 @@ You can install icoextract from any of these distribution repositories:
 
 ## Usage
 
-icoextract ships `icoextract` and `icolist` scripts to extract and list icon resources in an executable:
+icoextract ships `icoextract` and `icolist` scripts to extract and list icon resources inside a file.
+
+**Note**: recent versions of Windows (Windows 10 1903+) have moved icons from system libraries (`shell32.dll`, etc.) into a new [`C:\Windows\SystemResources`](https://superuser.com/questions/1480268/) folder. icoextract can extract these `.mun` files natively, but the `.dll`s themselves no longer contain icons.
 
 ```
 usage: icoextract [-h] [-V] [-n NUM] [-v] input output
