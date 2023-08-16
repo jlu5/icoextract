@@ -52,8 +52,8 @@ def main():
     parser.add_argument("-V", "--version", action='version', version=f'exe-thumbnailer, part of icoextract {__version__}')
     parser.add_argument("-s", "--size", type=int, help="size of desired thumbnail", default=256)
     parser.add_argument("-v", "--verbose", action="store_true", help="enables debug logging")
-    parser.add_argument("inputfile", help="input file name")
-    parser.add_argument("outfile", help="output file name", nargs='?')
+    parser.add_argument("inputfile", help="input file name (.exe/.dll/.mun)")
+    parser.add_argument("outfile", help="output file name (.png)", nargs='?')
     args = parser.parse_args()
 
     if args.verbose:

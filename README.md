@@ -43,10 +43,10 @@ usage: icoextract [-h] [-V] [-n NUM] [-v] input output
 Windows PE EXE icon extractor.
 
 positional arguments:
-  input              input filename
-  output             output filename
+  input              input filename (.exe/.dll/.mun)
+  output             output filename (.ico)
 
-optional arguments:
+options:
   -h, --help         show this help message and exit
   -V, --version      show program's version number and exit
   -n NUM, --num NUM  index of icon to extract
@@ -61,7 +61,7 @@ Lists group icons present in a program.
 positional arguments:
   input          input filename
 
-optional arguments:
+options:
   -h, --help     show this help message and exit
   -V, --version  show program's version number and exit
   -v, --verbose  enables debug logging

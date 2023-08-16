@@ -12,8 +12,8 @@ def main():
     parser.add_argument("-V", "--version", action='version', version=f'icoextract {__version__}')
     parser.add_argument("-n", "--num", type=int, help="index of icon to extract", default=0)
     parser.add_argument("-v", "--verbose", action="store_true", help="enables debug logging")
-    parser.add_argument("input", help="input filename")
-    parser.add_argument("output", help="output filename")
+    parser.add_argument("input", help="input filename (.exe/.dll/.mun)")
+    parser.add_argument("output", help="output filename (.ico)")
     args = parser.parse_args()
 
     if args.verbose:
