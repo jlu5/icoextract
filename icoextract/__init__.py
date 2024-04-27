@@ -25,11 +25,13 @@ except ImportError:
     logger.info('icoextract: failed to read program version')
 
 class IconExtractorError(Exception):
-    pass
+    """Superclass for exceptions raised by IconExtractor."""
+
 class NoIconsAvailableError(IconExtractorError):
-    pass
+    """Exception raised when the input program has no icon resources."""
+
 class InvalidIconDefinitionError(IconExtractorError):
-    pass
+    """Exception raised when the input program has an invalid icon resource."""
 
 class IconExtractor():
     def __init__(self, filename=None, data=None):
