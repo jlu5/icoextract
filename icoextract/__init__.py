@@ -157,4 +157,9 @@ class IconExtractor():
         self._write_ico(f, num=num)
         return f
 
-__all__ = ['IconExtractor']
+__all__ = [
+    'IconExtractor',
+    'IconExtractorError',
+    'NoIconsAvailableError',
+    'InvalidIconDefinitionError'
+]
