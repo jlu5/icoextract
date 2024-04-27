@@ -142,16 +142,16 @@ class IconExtractor():
             group_icon, icon_data = datapair
             fd.write(icon_data)
 
-    def export_icon(self, fname, num=0):
+    def export_icon(self, filename, num=0):
         """
-        Writes ICO data of the requested group icon ID to fname.
+        Writes ICO data of the requested group icon index to `filename`.
         """
-        with open(fname, 'wb') as f:
+        with open(filename, 'wb') as f:
             self._write_ico(f, num=num)
 
     def get_icon(self, num=0):
         """
-        Returns ICO data as a BytesIO() instance, containing the requested group icon ID.
+        Returns ICO data as a BytesIO() instance containing the requested group icon index.
         """
         f = io.BytesIO()
         self._write_ico(f, num=num)
