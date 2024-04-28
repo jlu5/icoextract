@@ -47,7 +47,33 @@ local test_with(version, do_deploy=false) = {
                 when: {
                     event: ["tag"],
                 }
-            }
+            },
+
+            if do_deploy then {
+                name: "doc",
+                image: "python:" + version + "-bookworm",
+                commands: [
+                    "pip install pdoc3",
+                    "pdoc --html icoextract --template-dir pdoc/templates",
+                    "ln html/icoextract/index.html icoextract.html"
+                ],
+                volumes: volumes(),
+            },
+
+            if do_deploy then {
+                name: "doc_upload",
+                image: "techknowlogick/drone-b2",
+                settings: {
+                    bucket: "jlu5-ci-doc",
+                    account: {from_secret: "b2_account"},
+                    key: {from_secret: "b2_key"},
+                    source: "icoextract.html",
+                    target: "/",
+                },
+                when: {
+                    branch: ["master", "ci-*"],
+                },
+            },
         ]),
     volumes: [
         {

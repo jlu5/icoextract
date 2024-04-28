@@ -37,6 +37,8 @@ icoextract ships `icoextract` and `icolist` scripts to extract and list icon res
 
 **Note**: recent versions of Windows (Windows 10 1903+) have moved icons from system libraries (`shell32.dll`, etc.) into a new [`C:\Windows\SystemResources`](https://superuser.com/questions/1480268/) folder. icoextract can extract these `.mun` files natively, but the `.dll`s themselves no longer contain icons.
 
+For API docs, see https://projects.jlu5.com/icoextract.html
+
 ```
 usage: icoextract [-h] [-V] [-n NUM] [-v] input output
 
