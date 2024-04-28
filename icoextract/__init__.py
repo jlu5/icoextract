@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """
-Windows PE EXE icon extractor.
+Windows Portable Executable (PE) icon extractor.
+
+.. include:: ../LIB-USAGE.md
 """
 
 import io
@@ -36,10 +38,10 @@ class InvalidIconDefinitionError(IconExtractorError):
 class IconExtractor():
     def __init__(self, filename=None, data=None):
         """
-        Loads an executable from the given filename or data (raw bytes).
-        As with pefile, if both filename and data are given, filename takes precedence.
+        Loads an executable from the given `filename` or `data` (raw bytes).
+        As with pefile, if both `filename` and `data` are given, `filename` takes precedence.
 
-        If the executable has contains no icons, this will raise NoIconsAvailableError.
+        If the executable has contains no icons, this will raise `NoIconsAvailableError`.
         """
         # Use fast loading and explicitly load the RESOURCE directory entry. This saves a LOT of time
         # on larger files
@@ -144,14 +146,14 @@ class IconExtractor():
 
     def export_icon(self, filename, num=0):
         """
-        Writes ICO data of the requested group icon index to `filename`.
+        Exports ICO data for the requested group icon (`num`) to `filename`.
         """
         with open(filename, 'wb') as f:
             self._write_ico(f, num=num)
 
     def get_icon(self, num=0):
         """
-        Returns ICO data as a BytesIO() instance containing the requested group icon index.
+        Exports ICO data for the requested group icon (`num`) as a `io.BytesIO` instance.
         """
         f = io.BytesIO()
         self._write_ico(f, num=num)
@@ -163,3 +165,8 @@ __all__ = [
     'NoIconsAvailableError',
     'InvalidIconDefinitionError'
 ]
+
+__pdoc__ = {
+    'scripts': False,
+    'version': False,
+}
