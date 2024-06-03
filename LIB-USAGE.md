@@ -11,15 +11,15 @@ try:
     # Export the first group icon to a .ico file
     extractor.export_icon('/path/to/your.ico', num=0)
 
-    # Or save the .ico to a buffer, to pass it into another library
+    # Or read the .ico into a buffer, to pass it into other code
     data = extractor.get_icon(num=0)
 
     from PIL import Image
     im = Image.open(data)
-    # ... manipulate a copy of the icon directly
+    # ... manipulate a copy of the icon
 
 except IconExtractorError:
-    # No icons available, or the resource is malformed
+    # No icons available, or the icon resource is malformed
     pass
 
 ```
