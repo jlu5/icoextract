@@ -72,6 +72,7 @@ local test_with(version, do_deploy=false) = {
                 },
                 when: {
                     branch: ["master", "ci-*"],
+                    event: ["push"],
                 },
             },
         ]),
