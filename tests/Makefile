@@ -4,7 +4,7 @@ PREFIX32=i686-w64-mingw32-
 
 all: testapp64.exe testapp64-nores.exe testapp64-noicon.exe \
 	testapp64-smallonly.exe \
-	testapp64-with128.exe
+	testapp64-with128.exe testapp64-with192.exe
 
 # icon with standard sizes: 16x16, 32x32, 48x48, 256x256
 testapp.ico: testapp.png
@@ -15,11 +15,20 @@ testapp.ico: testapp.png
 	convert testapp.png -resize 32x32 -depth 8 -remap netscape: -transparent black tmp-testapp8bpp-32.bmp
 	convert testapp.png -resize 48x48 -depth 8 -remap netscape: -transparent black tmp-testapp8bpp-48.bmp
 	convert testapp.png tmp-testapp*.bmp testapp.ico
-# small icon
+
+# Small icon (only up to 48x48)
+testapp-smallonly.ico: testapp.png
 	convert tmp-testapp-*.bmp testapp-smallonly.ico
+
 # All standard sizes + 128x128
+testapp-with128.ico: testapp.png
 	convert testapp.png -resize 128x128 tmp-testapp-128.png
 	convert testapp.png tmp-testapp*.bmp tmp-testapp*.png testapp-with128.ico
+
+# All small sizes + 128x128 + 192x192 (excluding 256x256)
+testapp-with192.ico: testapp.png
+	convert testapp.png -resize 192x192 tmp-testapp-192.png
+	convert tmp-testapp*.bmp tmp-testapp-128.png tmp-testapp-192.png testapp-with192.ico
 
 # Build with icon + version resource
 define build-with-icon =
@@ -35,11 +44,15 @@ testapp64.exe testapp32.exe: testapp.c testapp.ico
 	$(build-with-icon)
 
 testapp64-smallonly.exe testapp32-smallonly.exe: ICOSUFFIX=-smallonly
-testapp64-smallonly.exe testapp32-smallonly.exe: testapp.c testapp.ico
+testapp64-smallonly.exe testapp32-smallonly.exe: testapp.c testapp-smallonly.ico
 	$(build-with-icon)
 
 testapp64-with128.exe testapp32-with128.exe: ICOSUFFIX=-with128
-testapp64-with128.exe testapp32-with128.exe: testapp.c testapp.ico
+testapp64-with128.exe testapp32-with128.exe: testapp.c testapp-with128.ico
+	$(build-with-icon)
+
+testapp64-with192.exe testapp32-with192.exe: ICOSUFFIX=-with192
+testapp64-with192.exe testapp32-with192.exe: testapp.c testapp-with192.ico
 	$(build-with-icon)
 
 # Build with only version resource

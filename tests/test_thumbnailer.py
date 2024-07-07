@@ -61,5 +61,47 @@ class ThumbnailerTestCase(unittest.TestCase):
             self.assertEqual(im.width, 128)
             self.assertEqual(im.height, 128)
 
+    def test_192_normal(self):
+        """Test that exe files with oddly sized icons (192x192) are wrapped to the expected dimensions"""
+        outfile = self._generate_thumbnail("testapp64-with192.exe", "tmp-thumbnail-192-normal.png", size=128)
+        with Image.open(outfile) as im:
+            self.assertEqual(im.width, 128)
+            self.assertEqual(im.height, 128)
+            self._compare_equal(im, "tmp-testapp-128.png")
+
+    def test_192_large(self):
+        """Test that exe files with oddly sized icons (192x192) are wrapped to the expected dimensions"""
+        outfile = self._generate_thumbnail("testapp64-with192.exe", "tmp-thumbnail-192-large.png", size=256)
+        with Image.open(outfile) as im:
+            self.assertEqual(im.width, 192)
+            self.assertEqual(im.height, 192)
+
+    def test_unsupported_output_size_too_large(self):
+        """Test an invalid requested icon size (> 256)"""
+        outfile = self._generate_thumbnail("testapp64.exe", "tmp-thumbnail-test-unsupported-size-too-large.png",
+        size=300)
+        with Image.open(outfile) as im:
+            self.assertEqual(im.width, 256)
+            self.assertEqual(im.height, 256)
+            self._compare_equal(im, "testapp.png")
+
+    def test_unsupported_output_size_too_small(self):
+        """Test an invalid requested icon size (< 128)"""
+        outfile = self._generate_thumbnail("testapp64.exe", "tmp-thumbnail-test-unsupported-size-too-small.png",
+        size=64)
+        with Image.open(outfile) as im:
+            self.assertEqual(im.width, 128)
+            self.assertEqual(im.height, 128)
+            self._compare_equal(im, "tmp-testapp-128.png")
+
+    def test_unsupported_output_size_between(self):
+        """Test an invalid requested icon size (> 128, < 256)"""
+        outfile = self._generate_thumbnail("testapp64.exe", "tmp-thumbnail-test-unsupported-size-between.png",
+        size=200)
+        with Image.open(outfile) as im:
+            self.assertEqual(im.width, 128)
+            self.assertEqual(im.height, 128)
+            self._compare_equal(im, "tmp-testapp-128.png")
+
 if __name__ == '__main__':
     unittest.main()
