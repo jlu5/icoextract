@@ -64,7 +64,7 @@ def main():
     parser.add_argument("-v", "--verbose", action="store_true", help="enables debug logging")
     parser.add_argument("-f", "--force-resize", action="store_true", help="force resize thumbnail to the specified size")
     parser.add_argument("inputfile", help="input file name (.exe/.dll/.mun)")
-    parser.add_argument("outfile", help="output file name (.png)", nargs='?')
+    parser.add_argument("outfile", help="output file name (.png)")
     args = parser.parse_args()
 
     if args.verbose:
