@@ -1,6 +1,4 @@
 #!/usr/bin/env python3
-
-import filecmp
 import os.path
 import unittest
 
@@ -23,38 +21,45 @@ class ThumbnailerTestCase(unittest.TestCase):
                                 "Extracted image should match original")
 
     def test_thumbnailer_normal(self):
-        outfile = self._generate_thumbnail("testapp64.exe", "tmp-thumbnail-test-normal.png", large_size=False)
+        outfile = self._generate_thumbnail("testapp64.exe", "tmp-thumbnail-test-normal.png", size=128)
         with Image.open(outfile) as im:
             self.assertEqual(im.width, 128)
             self.assertEqual(im.height, 128)
 
     def test_thumbnailer_large(self):
-        outfile = self._generate_thumbnail("testapp64.exe", "tmp-thumbnail-test-large.png", large_size=True)
+        outfile = self._generate_thumbnail("testapp64.exe", "tmp-thumbnail-test-large.png", size=256)
         with Image.open(outfile) as im:
             self.assertEqual(im.width, 256)
             self.assertEqual(im.height, 256)
             self._compare_equal(im, "testapp.png")
 
     def test_thumbnailer_with128_large(self):
-        outfile = self._generate_thumbnail("testapp64-with128.exe", "tmp-thumbnail-test-with-128-large.png", large_size=True)
+        outfile = self._generate_thumbnail("testapp64-with128.exe", "tmp-thumbnail-test-with-128-large.png", size=256)
         with Image.open(outfile) as im:
             self.assertEqual(im.width, 256)
             self.assertEqual(im.height, 256)
             self._compare_equal(im, "testapp.png")
 
     def test_thumbnailer_with128_normal(self):
-        outfile = self._generate_thumbnail("testapp64-with128.exe", "tmp-thumbnail-test-with-128-normal.png", large_size=False)
+        outfile = self._generate_thumbnail("testapp64-with128.exe", "tmp-thumbnail-test-with-128-normal.png", size=128)
         with Image.open(outfile) as im:
             self.assertEqual(im.width, 128)
             self.assertEqual(im.height, 128)
             self._compare_equal(im, "tmp-testapp-128.png")
 
     def test_thumbnailer_smallonly(self):
-        outfile = self._generate_thumbnail("testapp32-smallonly.exe", "tmp-thumbnail-test-smallonly.png", large_size=False)
+        outfile = self._generate_thumbnail("testapp32-smallonly.exe", "tmp-thumbnail-test-smallonly.png", size=128)
         with Image.open(outfile) as im:
             self.assertEqual(im.width, 48)
             self.assertEqual(im.height, 48)
             self._compare_equal(im, "tmp-testapp-48.bmp")
+
+    def test_thumbnailer_force_resize(self):
+        outfile = self._generate_thumbnail("testapp32-smallonly.exe", "tmp-thumbnail-force-resize.png", size=128,
+                                           force_resize=True)
+        with Image.open(outfile) as im:
+            self.assertEqual(im.width, 128)
+            self.assertEqual(im.height, 128)
 
 if __name__ == '__main__':
     unittest.main()
