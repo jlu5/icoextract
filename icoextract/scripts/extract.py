@@ -4,9 +4,11 @@ Windows PE EXE icon extractor.
 """
 import argparse
 import logging
+import os.path
 
 from icoextract import IconExtractor, logger, __version__
 
+_WRONG_EXTENSIONS_HINT = {'.jpg', '.jpeg', '.png'}
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("-V", "--version", action='version', version=f'icoextract {__version__}')
@@ -21,3 +23,7 @@ def main():
 
     extractor = IconExtractor(args.input)
     extractor.export_icon(args.output, num=args.num)
+    file_ext = os.path.splitext(args.output)[1].lower()
+    if file_ext in _WRONG_EXTENSIONS_HINT:
+        logger.warning('This tool outputs .ico files, not %s. The resulting file will have the wrong file extension.',
+                       file_ext)
