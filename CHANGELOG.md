@@ -1,5 +1,11 @@
 # Changelog
 
+## icoextract 0.1.6 (2025-03-02)
+
+- exe-thumbnailer: add `--force-resize` convenience option
+- exe-thumbnailer: fix handling of icons containing non-standard sizes like 192x192
+- cli: warn when exporting images with a wrong extension (.jpg or .png). This aims to address a common source of confusion
+
 ## icoextract 0.1.5 (2024-04-28)
 
 - Add `application/vnd.microsoft.portable-executable` to supported MIME types
