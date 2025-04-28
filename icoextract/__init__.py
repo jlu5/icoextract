@@ -62,12 +62,13 @@ class IconExtractor():
         self.rticonres = resources.get(pefile.RESOURCE_TYPE["RT_ICON"])
 
         # Populate resources by ID
+        self._group_icons = {entry.struct.Name: idx for idx, entry in enumerate(self.groupiconres.directory.entries)}
         self._icons = {icon_entry_list.id: icon_entry_list.directory.entries[0]  # Select first language
                        for icon_entry_list in self.rticonres.directory.entries}
 
-    def list_group_icons(self):
+    def list_group_icons(self) -> list[tuple[int, int]]:
         """
-        Returns all group icon entries as a list of (name, offset) tuples.
+        Returns all group icon entries as a list of (resource ID, offset) tuples.
         """
         return [(e.struct.Name, e.struct.OffsetToData)
                 for e in self.groupiconres.directory.entries]
@@ -79,7 +80,7 @@ class IconExtractor():
         Result is a list of (group icon structure, icon data) tuples.
         """
         groupicon = self.groupiconres.directory.entries[index]
-        icon_id = groupicon.struct.Name
+        resource_id = groupicon.struct.Name
         icon_lang = None
         if groupicon.struct.DataIsDirectory:
             # Select the first language from subfolders as needed.
@@ -95,7 +96,7 @@ class IconExtractor():
         grp_icon_dir = self._pe.__unpack_data__(GRPICONDIR_FORMAT, grp_icon_data, file_offset)
         logger.debug("Group icon %d has ID %s and %d images: %s",
                      # pylint: disable=no-member
-                     index, icon_id, grp_icon_dir.Count, grp_icon_dir)
+                     index, resource_id, grp_icon_dir.Count, grp_icon_dir)
 
         # pylint: disable=no-member
         if grp_icon_dir.Reserved:
@@ -119,10 +120,16 @@ class IconExtractor():
             grp_icons.append((grp_icon, icon_data))
         return grp_icons
 
-    def _write_ico(self, fd, num=0):
+    def _write_ico(self, fd, num=0, resource_id=None):
         """
         Writes ICO data to a file descriptor.
         """
+        if resource_id is not None:
+            try:
+                num = self._group_icons[resource_id]
+            except KeyError as e:
+                raise KeyError(f"No such icon with resource ID {resource_id}") from e
+
         icons = self._get_icon(index=num)
         fd.write(b"\x00\x00") # 2 reserved bytes
         fd.write(struct.pack("<H", 1)) # 0x1 (little endian) specifying that this is an .ICO image
@@ -144,19 +151,23 @@ class IconExtractor():
             group_icon, icon_data = datapair
             fd.write(icon_data)
 
-    def export_icon(self, filename, num=0):
+    def export_icon(self, filename, num=0, resource_id=None):
         """
-        Exports ICO data for the requested group icon (`num`) to `filename`.
+        Exports ICO data for the requested group icon to `filename`.
+
+        Icons can be selected by index (`num`) or resource ID. By default, the first icon in the binary is exported.
         """
         with open(filename, 'wb') as f:
-            self._write_ico(f, num=num)
+            self._write_ico(f, num=num, resource_id=resource_id)
 
-    def get_icon(self, num=0):
+    def get_icon(self, num=0, resource_id=None) -> io.BytesIO:
         """
-        Exports ICO data for the requested group icon (`num`) as a `io.BytesIO` instance.
+        Exports ICO data for the requested group icon as a `io.BytesIO` instance.
+
+        Icons can be selected by index (`num`) or resource ID. By default, the first icon in the binary is exported.
         """
         f = io.BytesIO()
-        self._write_ico(f, num=num)
+        self._write_ico(f, num=num, resource_id=resource_id)
         return f
 
 __all__ = [

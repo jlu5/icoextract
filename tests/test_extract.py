@@ -7,7 +7,7 @@ import unittest
 import icoextract
 
 class UtilsTestCase(unittest.TestCase):
-    def _test_extract(self, infile, compare_against=None):
+    def _test_extract(self, infile, compare_against=None, **kwargs):
         # Read/write test files in tests/ folder, regardless of where working directory is
         tests_dir = os.path.dirname(__file__)
         inpath = os.path.join(tests_dir, infile)
@@ -16,7 +16,7 @@ class UtilsTestCase(unittest.TestCase):
 
         outfile = f"tmp-{infile}.ico"
         outpath = os.path.join(tests_dir, outfile)
-        ie.export_icon(outpath)
+        ie.export_icon(outpath, **kwargs)
 
         assert compare_against, \
             "Successful extractions should have a file to compare against"
@@ -57,6 +57,18 @@ class UtilsTestCase(unittest.TestCase):
         with open(os.path.join(tests_dir, "testapp64.exe"), 'rb') as f:
             ie = icoextract.IconExtractor(data=f.read())
             self.assertEqual(len(ie.list_group_icons()), 1)
+
+    def test_extract_icon_id(self):
+        """Test extracting an icon by its resource ID"""
+        self._test_extract("testapp64.exe", "testapp.ico", resource_id=2)
+
+        # ID does not exist
+        with self.assertRaises(KeyError):
+            self._test_extract("testapp64.exe", resource_id=1337)
+
+        # ID is not an icon
+        with self.assertRaises(KeyError):
+            self._test_extract("testapp64.exe", resource_id=1)
 
 if __name__ == '__main__':
     unittest.main()
