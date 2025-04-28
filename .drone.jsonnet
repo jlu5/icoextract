@@ -19,7 +19,7 @@ local test_with(version, do_deploy=false) = {
                 image: "python:" + version + "-bookworm",
                 commands: [
                     "pip install -r requirements.txt",
-                    "python setup.py install"
+                    "pip install ."
                 ],
                 volumes: volumes()
             },
