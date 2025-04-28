@@ -40,19 +40,20 @@ icoextract ships `icoextract` and `icolist` scripts to extract and list icon res
 For API docs, see https://projects.jlu5.com/icoextract.html
 
 ```
-usage: icoextract [-h] [-V] [-n NUM] [-v] input output
+usage: icoextract [-h] [-V] [-n NUM] [-i ID] [-v] input output
 
 Windows PE EXE icon extractor.
 
 positional arguments:
-  input              input filename (.exe/.dll/.mun)
-  output             output filename (.ico)
+  input          input filename (.exe/.dll/.mun)
+  output         output filename (.ico)
 
 options:
-  -h, --help         show this help message and exit
-  -V, --version      show program's version number and exit
-  -n NUM, --num NUM  index of icon to extract
-  -v, --verbose      enables debug logging
+  -h, --help     show this help message and exit
+  -V, --version  show program's version number and exit
+  -n, --num NUM  index of icon to extract
+  -i, --id ID    resource ID of icon to extract
+  -v, --verbose  enables debug logging
 ```
 
 ```

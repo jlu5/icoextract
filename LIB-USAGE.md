@@ -18,6 +18,9 @@ try:
     im = Image.open(data)
     # ... manipulate a copy of the icon
 
+    # In icoextract 0.2.0+, you can also extract icons by resource ID
+    extractor.export_icon('/path/to/your.ico', resource_id=1234)
+
 except IconExtractorError:
     # No icons available, or the icon resource is malformed
     pass
