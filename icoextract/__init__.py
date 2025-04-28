@@ -61,6 +61,10 @@ class IconExtractor():
             raise NoIconsAvailableError("File has no group icon resources")
         self.rticonres = resources.get(pefile.RESOURCE_TYPE["RT_ICON"])
 
+        # Populate resources by ID
+        self._icons = {icon_entry_list.id: icon_entry_list.directory.entries[0]  # Select first language
+                       for icon_entry_list in self.rticonres.directory.entries}
+
     def list_group_icons(self):
         """
         Returns all group icon entries as a list of (name, offset) tuples.
@@ -68,23 +72,30 @@ class IconExtractor():
         return [(e.struct.Name, e.struct.OffsetToData)
                 for e in self.groupiconres.directory.entries]
 
-    def _get_group_icon_entries(self, num=0):
+    def _get_icon(self, index=0) -> list[tuple[pefile.Structure, bytes]]:
         """
-        Returns the group icon entries for the specified group icon in the executable.
+        Returns the specified group icon in the binary.
+
+        Result is a list of (group icon structure, icon data) tuples.
         """
-        groupicon = self.groupiconres.directory.entries[num]
+        groupicon = self.groupiconres.directory.entries[index]
+        icon_id = groupicon.struct.Name
+        icon_lang = None
         if groupicon.struct.DataIsDirectory:
             # Select the first language from subfolders as needed.
             groupicon = groupicon.directory.entries[0]
+            icon_lang = groupicon.struct.Name
+            logger.debug("Picking first language %s", icon_lang)
 
         # Read the data pointed to by the group icon directory (GRPICONDIR) struct.
         rva = groupicon.data.struct.OffsetToData
-        size = groupicon.data.struct.Size
-        data = self._pe.get_data(rva, size)
+        grp_icon_data = self._pe.get_data(rva, groupicon.data.struct.Size)
         file_offset = self._pe.get_offset_from_rva(rva)
 
-        grp_icon_dir = self._pe.__unpack_data__(GRPICONDIR_FORMAT, data, file_offset)
-        logger.debug(grp_icon_dir)
+        grp_icon_dir = self._pe.__unpack_data__(GRPICONDIR_FORMAT, grp_icon_data, file_offset)
+        logger.debug("Group icon %d has ID %s and %d images: %s",
+                     # pylint: disable=no-member
+                     index, icon_id, grp_icon_dir.Count, grp_icon_dir)
 
         # pylint: disable=no-member
         if grp_icon_dir.Reserved:
@@ -92,42 +103,27 @@ class IconExtractor():
             raise InvalidIconDefinitionError("Invalid group icon definition (got Reserved=%s instead of 0)"
                 % hex(grp_icon_dir.Reserved))
 
-        # For each group icon entry (GRPICONDIRENTRY) that immediately follows, read its data and save it.
+        # For each group icon entry (GRPICONDIRENTRY) that immediately follows, read the struct and look up the
+        # corresponding icon image
         grp_icons = []
         icon_offset = grp_icon_dir.sizeof()
-        for _ in range(grp_icon_dir.Count):
-            grp_icon = self._pe.__unpack_data__(GRPICONDIRENTRY_FORMAT, data[icon_offset:], file_offset+icon_offset)
+        for grp_icon_index in range(grp_icon_dir.Count):
+            grp_icon = self._pe.__unpack_data__(
+                GRPICONDIRENTRY_FORMAT, grp_icon_data[icon_offset:], file_offset+icon_offset)
             icon_offset += grp_icon.sizeof()
-            grp_icons.append(grp_icon)
-            logger.debug("Got logical group icon %s", grp_icon)
+            logger.debug("Got group icon entry %d: %s", grp_icon_index, grp_icon)
 
+            icon_entry = self._icons[grp_icon.ID]
+            icon_data = self._pe.get_data(icon_entry.data.struct.OffsetToData, icon_entry.data.struct.Size)
+            logger.debug("Got icon data for ID %d: %s", grp_icon.ID, icon_entry.data.struct)
+            grp_icons.append((grp_icon, icon_data))
         return grp_icons
-
-    def _get_icon_data(self, icon_ids):
-        """
-        Return a list of raw icon images corresponding to the icon IDs given.
-        """
-        icons = []
-        icon_entry_lists = {icon_entry_list.id: icon_entry_list for icon_entry_list in self.rticonres.directory.entries}
-        for icon_id in icon_ids:
-            icon_entry_list = icon_entry_lists[icon_id]
-
-            icon_entry = icon_entry_list.directory.entries[0]  # Select first language
-            rva = icon_entry.data.struct.OffsetToData
-            size = icon_entry.data.struct.Size
-            data = self._pe.get_data(rva, size)
-            logger.debug("Exported icon with ID %s: %s", icon_entry_list.id, icon_entry.struct)
-            icons.append(data)
-        return icons
 
     def _write_ico(self, fd, num=0):
         """
         Writes ICO data to a file descriptor.
         """
-        group_icons = self._get_group_icon_entries(num=num)
-        icon_images = self._get_icon_data([g.ID for g in group_icons])
-        icons = list(zip(group_icons, icon_images))
-        assert len(group_icons) == len(icon_images)
+        icons = self._get_icon(index=num)
         fd.write(b"\x00\x00") # 2 reserved bytes
         fd.write(struct.pack("<H", 1)) # 0x1 (little endian) specifying that this is an .ICO image
         fd.write(struct.pack("<H", len(icons)))  # number of images
