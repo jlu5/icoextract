@@ -17,7 +17,7 @@ setup(
     license="MIT/Expat",
     classifiers=[
         # https://pypi.org/classifiers/
-        'Development Status :: 3 - Alpha',
+        'Development Status :: 4 - Beta',
 
         'Intended Audience :: Developers',
         'Intended Audience :: End Users/Desktop',
@@ -26,11 +26,11 @@ setup(
         'Operating System :: OS Independent',
         'Operating System :: POSIX',
         'Programming Language :: Python :: 3 :: Only',
-        'Programming Language :: Python :: 3.6',
-        'Programming Language :: Python :: 3.7',
-        'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
         'Programming Language :: Python :: 3.10',
+        'Programming Language :: Python :: 3.11',
+        'Programming Language :: Python :: 3.12',
+        'Programming Language :: Python :: 3.13',
     ],
 
     packages=find_packages(exclude=['tests']),

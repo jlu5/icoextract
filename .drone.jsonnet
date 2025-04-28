@@ -85,9 +85,7 @@ local test_with(version, do_deploy=false) = {
 };
 
 [
-    test_with("3.8"),
     test_with("3.9"),
-    test_with("3.10"),
-    test_with("3.11"),
-    test_with("3.12", do_deploy=true),
+    test_with("3.12"),
+    test_with("3.13", do_deploy=true),
 ]
