@@ -7,11 +7,10 @@ import unittest
 import icoextract
 
 class UtilsTestCase(unittest.TestCase):
-    def _test_extract(self, infile, target):
+    def _test_extract(self, infile, compare_against=None):
         # Read/write test files in tests/ folder, regardless of where working directory is
         tests_dir = os.path.dirname(__file__)
         inpath = os.path.join(tests_dir, infile)
-        target = os.path.join(tests_dir, target)
 
         ie = icoextract.IconExtractor(inpath)
 
@@ -19,8 +18,11 @@ class UtilsTestCase(unittest.TestCase):
         outpath = os.path.join(tests_dir, outfile)
         ie.export_icon(outpath)
 
-        self.assertTrue(filecmp.cmp(outpath, target),
-                        f"{outpath} and {target} should be equal")
+        assert compare_against, \
+            "Successful extractions should have a file to compare against"
+        compare_against = os.path.join(tests_dir, compare_against)
+        self.assertTrue(filecmp.cmp(outpath, compare_against),
+                        f"{outpath} and {compare_against} should be equal")
         return ie
 
     # App has icon + version resource
@@ -31,12 +33,12 @@ class UtilsTestCase(unittest.TestCase):
     # App has only version resource
     def test_testapp64_noicon(self):
         with self.assertRaises(icoextract.NoIconsAvailableError):
-            self._test_extract("testapp64-noicon.exe", "testapp-noicon.ico")
+            self._test_extract("testapp64-noicon.exe")
 
     # App has no resource info at all
     def test_testapp64_nores(self):
         with self.assertRaises(icoextract.NoIconsAvailableError):
-            self._test_extract("testapp64-nores.exe", "testapp-nores.ico")
+            self._test_extract("testapp64-nores.exe")
 
     def test_testapp32(self):
         ie = self._test_extract("testapp32.exe", "testapp.ico")
@@ -44,11 +46,11 @@ class UtilsTestCase(unittest.TestCase):
 
     def test_testapp32_noicon(self):
         with self.assertRaises(icoextract.NoIconsAvailableError):
-            self._test_extract("testapp32-noicon.exe", "testapp-noicon.ico")
+            self._test_extract("testapp32-noicon.exe")
 
     def test_testapp32_nores(self):
         with self.assertRaises(icoextract.NoIconsAvailableError):
-            self._test_extract("testapp32-nores.exe", "testapp-nores.ico")
+            self._test_extract("testapp32-nores.exe")
 
     def test_fd_as_input(self):
         tests_dir = os.path.dirname(__file__)
