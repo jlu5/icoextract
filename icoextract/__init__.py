@@ -53,6 +53,7 @@ class IconExtractor():
 
         # Reverse the list of entries before making the mapping so that earlier values take precedence
         # When an executable includes multiple icon resources, we should use only the first one.
+        # pylint: disable=no-member
         resources = {rsrc.id: rsrc for rsrc in reversed(self._pe.DIRECTORY_ENTRY_RESOURCE.entries)}
 
         self.groupiconres = resources.get(pefile.RESOURCE_TYPE["RT_GROUP_ICON"])
@@ -85,13 +86,16 @@ class IconExtractor():
         grp_icon_dir = self._pe.__unpack_data__(GRPICONDIR_FORMAT, data, file_offset)
         logger.debug(grp_icon_dir)
 
+        # pylint: disable=no-member
         if grp_icon_dir.Reserved:
-            raise InvalidIconDefinitionError("Invalid group icon definition (got Reserved=%s instead of 0)" % hex(grp_icon_dir.Reserved))
+            # pylint: disable=no-member
+            raise InvalidIconDefinitionError("Invalid group icon definition (got Reserved=%s instead of 0)"
+                % hex(grp_icon_dir.Reserved))
 
         # For each group icon entry (GRPICONDIRENTRY) that immediately follows, read its data and save it.
         grp_icons = []
         icon_offset = grp_icon_dir.sizeof()
-        for idx in range(grp_icon_dir.Count):
+        for _ in range(grp_icon_dir.Count):
             grp_icon = self._pe.__unpack_data__(GRPICONDIRENTRY_FORMAT, data[icon_offset:], file_offset+icon_offset)
             icon_offset += grp_icon.sizeof()
             grp_icons.append(grp_icon)
@@ -112,7 +116,7 @@ class IconExtractor():
             rva = icon_entry.data.struct.OffsetToData
             size = icon_entry.data.struct.Size
             data = self._pe.get_data(rva, size)
-            logger.debug(f"Exported icon with ID {icon_entry_list.id}: {icon_entry.struct}")
+            logger.debug("Exported icon with ID %s: %s", icon_entry_list.id, icon_entry.struct)
             icons.append(data)
         return icons
 
