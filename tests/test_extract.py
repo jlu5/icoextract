@@ -6,8 +6,12 @@ import unittest
 
 import icoextract
 
-class UtilsTestCase(unittest.TestCase):
+class IconExtractorTestCase(unittest.TestCase):
     def _test_extract(self, infile, compare_against=None, **kwargs):
+        """
+        Wrapper to test extracting a single icon from infile, and comparing
+        the output with an existing .ico file
+        """
         # Read/write test files in tests/ folder, regardless of where working directory is
         tests_dir = os.path.dirname(__file__)
         inpath = os.path.join(tests_dir, infile)
@@ -25,38 +29,33 @@ class UtilsTestCase(unittest.TestCase):
                         f"{outpath} and {compare_against} should be equal")
         return ie
 
-    # App has icon + version resource
-    def test_testapp64(self):
-        ie = self._test_extract("testapp64.exe", "testapp.ico")
-        self.assertEqual(len(ie.list_group_icons()), 1)
+    def test_basic(self):
+        """Test basic extraction cases"""
+        for app in ["testapp64.exe", "testapp32.exe"]:
+            with self.subTest(app=app):
+                ie = self._test_extract(app, "testapp.ico")
+                self.assertEqual(len(ie.list_group_icons()), 1)
 
-        # Nonexistent icon index
-        with self.assertRaises(icoextract.IconNotFoundError):
-            self._test_extract("testapp64.exe", num=10)
+                # Nonexistent icon index
+                with self.assertRaises(icoextract.IconNotFoundError):
+                    self._test_extract(app, num=10)
 
-    # App has only version resource
-    def test_testapp64_noicon(self):
-        with self.assertRaises(icoextract.NoIconsAvailableError):
-            self._test_extract("testapp64-noicon.exe")
-
-    # App has no resource info at all
-    def test_testapp64_nores(self):
-        with self.assertRaises(icoextract.NoIconsAvailableError):
-            self._test_extract("testapp64-nores.exe")
-
-    def test_testapp32(self):
-        ie = self._test_extract("testapp32.exe", "testapp.ico")
-        self.assertEqual(len(ie.list_group_icons()), 1)
-
-    def test_testapp32_noicon(self):
-        with self.assertRaises(icoextract.NoIconsAvailableError):
-            self._test_extract("testapp32-noicon.exe")
-
-    def test_testapp32_nores(self):
-        with self.assertRaises(icoextract.NoIconsAvailableError):
-            self._test_extract("testapp32-nores.exe")
+    def test_no_icon_resource(self):
+        """Test that NoIconsAvailableError is raised when the input binary has
+        no icons"""
+        cases = [
+            # App has only version resource
+            "testapp64-noicon.exe", "testapp32-noicon.exe",
+            # App has no resource info at all
+            "testapp32-nores.exe", "testapp32-nores.exe"
+        ]
+        for app in cases:
+            with self.subTest(app=app):
+                with self.assertRaises(icoextract.NoIconsAvailableError):
+                    self._test_extract(app)
 
     def test_fd_as_input(self):
+        """Test passing binary input into IconExtractor directly"""
         tests_dir = os.path.dirname(__file__)
         with open(os.path.join(tests_dir, "testapp64.exe"), 'rb') as f:
             ie = icoextract.IconExtractor(data=f.read())
