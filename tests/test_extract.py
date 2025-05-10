@@ -30,6 +30,10 @@ class UtilsTestCase(unittest.TestCase):
         ie = self._test_extract("testapp64.exe", "testapp.ico")
         self.assertEqual(len(ie.list_group_icons()), 1)
 
+        # Nonexistent icon index
+        with self.assertRaises(icoextract.IconNotFoundError):
+            self._test_extract("testapp64.exe", num=10)
+
     # App has only version resource
     def test_testapp64_noicon(self):
         with self.assertRaises(icoextract.NoIconsAvailableError):
@@ -63,11 +67,11 @@ class UtilsTestCase(unittest.TestCase):
         self._test_extract("testapp64.exe", "testapp.ico", resource_id=2)
 
         # ID does not exist
-        with self.assertRaises(KeyError):
+        with self.assertRaises(icoextract.IconNotFoundError):
             self._test_extract("testapp64.exe", resource_id=1337)
 
         # ID is not an icon
-        with self.assertRaises(KeyError):
+        with self.assertRaises(icoextract.IconNotFoundError):
             self._test_extract("testapp64.exe", resource_id=1)
 
 if __name__ == '__main__':

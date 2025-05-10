@@ -29,6 +29,9 @@ except ImportError:
 class IconExtractorError(Exception):
     """Superclass for exceptions raised by IconExtractor."""
 
+class IconNotFoundError(IconExtractorError):
+    """Exception raised when extracting an icon index or resource ID that does not exist."""
+
 class NoIconsAvailableError(IconExtractorError):
     """Exception raised when the input program has no icon resources."""
 
@@ -79,7 +82,10 @@ class IconExtractor():
 
         Result is a list of (group icon structure, icon data) tuples.
         """
-        groupicon = self.groupiconres.directory.entries[index]
+        try:
+            groupicon = self.groupiconres.directory.entries[index]
+        except IndexError:
+            raise IconNotFoundError(f"No icon exists at index {index}") from None
         resource_id = groupicon.struct.Name
         icon_lang = None
         if groupicon.struct.DataIsDirectory:
@@ -127,8 +133,8 @@ class IconExtractor():
         if resource_id is not None:
             try:
                 num = self._group_icons[resource_id]
-            except KeyError as e:
-                raise KeyError(f"No such icon with resource ID {resource_id}") from e
+            except KeyError:
+                raise IconNotFoundError(f"No icon exists with resource ID {resource_id}") from None
 
         icons = self._get_icon(index=num)
         fd.write(b"\x00\x00") # 2 reserved bytes
