@@ -7,6 +7,9 @@ Windows Portable Executable (PE) icon extractor.
 
 import io
 import logging
+import os
+import pathlib
+import platform
 import sys
 import struct
 
@@ -61,6 +64,8 @@ class IconExtractor():
 
         self.groupiconres = resources.get(pefile.RESOURCE_TYPE["RT_GROUP_ICON"])
         if not self.groupiconres:
+            if filename and platform.system() == "Windows":
+                self._print_windows_usage_hint(filename)
             raise NoIconsAvailableError("File has no group icon resources")
         self.rticonres = resources.get(pefile.RESOURCE_TYPE["RT_ICON"])
 
@@ -175,6 +180,21 @@ class IconExtractor():
         f = io.BytesIO()
         self._write_ico(f, num=num, resource_id=resource_id)
         return f
+
+    @staticmethod
+    def _print_windows_usage_hint(filename):
+        path = pathlib.Path(filename)
+        # pylint: disable=no-member
+        if path.suffix.lower() == '.dll' and sys.getwindowsversion().build >= 18362:
+            # Windows 10 >= 1903
+            systemroot = pathlib.Path(os.getenv('SYSTEMROOT'))
+            if path.is_relative_to(systemroot / 'System32') or \
+                    path.is_relative_to(systemroot / 'SysWOW64'):
+                mun_path = pathlib.Path(systemroot / 'SystemResources' / (path.name + '.mun'))
+                if mun_path.is_file():
+                    logger.warning(
+                        'System DLL files in Windows 10 1903+ no longer contain icons. '
+                        'Try extracting from %s instead.', mun_path)
 
 __all__ = [
     'IconExtractor',
