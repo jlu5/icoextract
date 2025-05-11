@@ -195,8 +195,9 @@ class IconExtractor():
 __all__ = [
     'IconExtractor',
     'IconExtractorError',
+    'IconNotFoundError',
     'NoIconsAvailableError',
-    'InvalidIconDefinitionError'
+    'InvalidIconDefinitionError',
 ]
 
 __pdoc__ = {
