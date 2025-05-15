@@ -3,30 +3,31 @@ PREFIX64=x86_64-w64-mingw32-
 PREFIX32=i686-w64-mingw32-
 
 all: testapp64.exe testapp64-nores.exe testapp64-noicon.exe \
-	testapp64-smallonly.exe \
-	testapp64-with128.exe testapp64-with192.exe
+	testapp64-smallonly.exe testapp64-with128.exe testapp64-with192.exe
 
-# icon with standard sizes: 16x16, 32x32, 48x48, 256x256
-testapp.ico: testapp.png
+bmps: testapp.png
 	convert testapp.png -resize 16x16 tmp-testapp-16.bmp
 	convert testapp.png -resize 32x32 tmp-testapp-32.bmp
 	convert testapp.png -resize 48x48 tmp-testapp-48.bmp
 	convert testapp.png -resize 16x16 -depth 8 -remap netscape: -transparent black tmp-testapp8bpp-16.bmp
 	convert testapp.png -resize 32x32 -depth 8 -remap netscape: -transparent black tmp-testapp8bpp-32.bmp
 	convert testapp.png -resize 48x48 -depth 8 -remap netscape: -transparent black tmp-testapp8bpp-48.bmp
+
+# icon with standard sizes: 16x16, 32x32, 48x48, 256x256
+testapp.ico: testapp.png bmps
 	convert testapp.png tmp-testapp*.bmp testapp.ico
 
 # Small icon (only up to 48x48)
-testapp-smallonly.ico: testapp.png
+testapp-smallonly.ico: testapp.png bmps
 	convert tmp-testapp-*.bmp testapp-smallonly.ico
 
 # All standard sizes + 128x128
-testapp-with128.ico: testapp.png
+testapp-with128.ico: testapp.png bmps
 	convert testapp.png -resize 128x128 tmp-testapp-128.png
 	convert testapp.png tmp-testapp*.bmp tmp-testapp*.png testapp-with128.ico
 
 # All small sizes + 128x128 + 192x192 (excluding 256x256)
-testapp-with192.ico: testapp.png
+testapp-with192.ico: testapp-with128.ico
 	convert testapp.png -resize 192x192 tmp-testapp-192.png
 	convert tmp-testapp*.bmp tmp-testapp-128.png tmp-testapp-192.png testapp-with192.ico
 
