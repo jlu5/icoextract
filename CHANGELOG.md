@@ -1,5 +1,13 @@
 # Changelog
 
+## icoextract 0.2.0 (2025-06-02)
+
+- Add `-i/--id` option to extract icons by resource ID
+- Refactor / streamline extraction code
+- Add new `IconNotFoundError` exception, raised when the requested icon index or resource ID does not exist
+- cli: warn when extracting from Windows system DLLs for which icons have been moved to the SystemResources directory
+- Bump minimum supported Python version to 3.9
+
 ## icoextract 0.1.6 (2025-03-02)
 
 - exe-thumbnailer: add `--force-resize` convenience option
