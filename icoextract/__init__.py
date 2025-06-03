@@ -61,24 +61,24 @@ class IconExtractor():
         # pylint: disable=no-member
         resources = {rsrc.id: rsrc for rsrc in reversed(self._pe.DIRECTORY_ENTRY_RESOURCE.entries)}
 
-        self.groupiconres = resources.get(pefile.RESOURCE_TYPE["RT_GROUP_ICON"])
-        if not self.groupiconres:
+        self._groupiconres = resources.get(pefile.RESOURCE_TYPE["RT_GROUP_ICON"])
+        if not self._groupiconres:
             if filename and platform.system() == "Windows":
                 self._print_windows_usage_hint(filename)
             raise NoIconsAvailableError("File has no group icon resources")
-        self.rticonres = resources.get(pefile.RESOURCE_TYPE["RT_ICON"])
+        self._rticonres = resources.get(pefile.RESOURCE_TYPE["RT_ICON"])
 
         # Populate resources by ID
-        self._group_icons = {entry.struct.Name: idx for idx, entry in enumerate(self.groupiconres.directory.entries)}
+        self._group_icons = {entry.struct.Name: idx for idx, entry in enumerate(self._groupiconres.directory.entries)}
         self._icons = {icon_entry_list.id: icon_entry_list.directory.entries[0]  # Select first language
-                       for icon_entry_list in self.rticonres.directory.entries}
+                       for icon_entry_list in self._rticonres.directory.entries}
 
     def list_group_icons(self) -> list[tuple[int, int]]:
         """
         Returns all group icon entries as a list of (resource ID, offset) tuples.
         """
         return [(e.struct.Name, e.struct.OffsetToData)
-                for e in self.groupiconres.directory.entries]
+                for e in self._groupiconres.directory.entries]
 
     def _get_icon(self, index=0) -> list[tuple[pefile.Structure, bytes]]:
         """
@@ -87,7 +87,7 @@ class IconExtractor():
         Result is a list of (group icon structure, icon data) tuples.
         """
         try:
-            groupicon = self.groupiconres.directory.entries[index]
+            groupicon = self._groupiconres.directory.entries[index]
         except IndexError:
             raise IconNotFoundError(f"No icon exists at index {index}") from None
         resource_id = groupicon.struct.Name
