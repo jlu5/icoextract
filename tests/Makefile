@@ -9,9 +9,6 @@ bmps: testapp.png
 	convert testapp.png -resize 16x16 tmp-testapp-16.bmp
 	convert testapp.png -resize 32x32 tmp-testapp-32.bmp
 	convert testapp.png -resize 48x48 tmp-testapp-48.bmp
-	convert testapp.png -resize 16x16 -depth 8 -remap netscape: -transparent black tmp-testapp8bpp-16.bmp
-	convert testapp.png -resize 32x32 -depth 8 -remap netscape: -transparent black tmp-testapp8bpp-32.bmp
-	convert testapp.png -resize 48x48 -depth 8 -remap netscape: -transparent black tmp-testapp8bpp-48.bmp
 
 # icon with standard sizes: 16x16, 32x32, 48x48, 256x256
 testapp.ico: testapp.png bmps
