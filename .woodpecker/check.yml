@@ -1,0 +1,17 @@
+steps:
+  - commands:
+      - pip install .[thumbnailer]
+      - apt-get update
+      - apt-get install -yy imagemagick gcc-mingw-w64 make
+      - cd tests && make
+      - python3 -m unittest discover . --verbose
+    image: python:${PYTHON_VERSION}
+    name: Run integration tests
+
+when:
+  event: [tag, push, pull_request]
+
+matrix:
+  PYTHON_VERSION:
+    - 3.9
+    - 3.14

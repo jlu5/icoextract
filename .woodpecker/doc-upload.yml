@@ -1,0 +1,19 @@
+steps:
+  - commands:
+      - pip install . pdoc3 awscli
+      - pdoc --html icoextract --template-dir pdoc/templates
+      - aws s3 cp html/icoextract/index.html s3://jlu5-ci-doc/icoextract.html
+    image: python:3.14
+    name: Upload API docs
+    environment:
+      AWS_ACCESS_KEY_ID:
+        from_secret: AWS_ACCESS_KEY_ID
+      AWS_SECRET_ACCESS_KEY:
+        from_secret: AWS_SECRET_ACCESS_KEY
+      AWS_ENDPOINT_URL_S3: https://s3.us-west-000.backblazeb2.com
+
+when:
+  event: [tag]
+
+depends_on:
+- check

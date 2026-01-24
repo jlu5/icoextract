@@ -1,0 +1,16 @@
+steps:
+  - commands:
+      - pip install build twine
+      - python3 -m build
+      - twine upload -r testpypi --username __token__ dist/*
+    image: python:3.14
+    name: Upload release to PyPI
+    environment:
+      TWINE_PASSWORD:
+        from_secret: testpypi_token
+
+when:
+  event: [tag]
+
+depends_on:
+- check
