@@ -1,6 +1,12 @@
 #include <windows.h>
 
-int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR lpCmdLine, INT nCmdShow) {
-    MessageBoxW(NULL, L"Hello world!", L"Test Application", MB_ICONASTERISK);
+#ifdef __WATCOMC__
+/* Windows 3.x (Win16) */
+int PASCAL WinMain(HANDLE hInstance, HANDLE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
+#else
+int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR lpCmdLine, int nCmdShow)
+#endif
+{
+    MessageBox(NULL, "Hello world!", "Test Application", MB_ICONASTERISK);
     return 0;
 }
