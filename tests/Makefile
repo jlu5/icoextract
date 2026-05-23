@@ -1,9 +1,16 @@
 CFLAGS=-mwindows -g
-PREFIX64=x86_64-w64-mingw32-
-PREFIX32=i686-w64-mingw32-
+MINGW64=x86_64-w64-mingw32-
+MINGW32=i686-w64-mingw32-
 
-all: testapp64.exe testapp64-nores.exe testapp64-noicon.exe \
+.PHONY: all win64 win32 bmps clean
+
+win64: testapp64.exe testapp64-nores.exe testapp64-noicon.exe \
 	testapp64-smallonly.exe testapp64-with128.exe testapp64-with192.exe
+
+win32: testapp32.exe testapp32-nores.exe testapp32-noicon.exe \
+	testapp32-smallonly.exe testapp32-with128.exe testapp32-with192.exe
+
+all: win64 win32
 
 bmps: testapp.png
 	convert testapp.png -resize 16x16 tmp-testapp-16.bmp
@@ -32,10 +39,10 @@ testapp-with192.ico: testapp-with128.ico
 define build-with-icon =
 cat testapp-base.rc > tmp-testapp$(ICOSUFFIX).rc
 echo "2 ICON testapp$(ICOSUFFIX).ico" >> tmp-testapp$(ICOSUFFIX).rc
-$(PREFIX64)windres tmp-testapp$(ICOSUFFIX).rc -O coff -o tmp-testapp64$(ICOSUFFIX).res
-$(PREFIX64)gcc $(CFLAGS) -o testapp64$(ICOSUFFIX).exe testapp.c tmp-testapp64$(ICOSUFFIX).res
-$(PREFIX32)windres tmp-testapp$(ICOSUFFIX).rc -O coff -o tmp-testapp32$(ICOSUFFIX).res
-$(PREFIX32)gcc $(CFLAGS) -o testapp32$(ICOSUFFIX).exe testapp.c tmp-testapp32$(ICOSUFFIX).res
+$(MINGW64)windres tmp-testapp$(ICOSUFFIX).rc -O coff -o tmp-testapp64$(ICOSUFFIX).res
+$(MINGW64)gcc $(CFLAGS) -o testapp64$(ICOSUFFIX).exe testapp.c tmp-testapp64$(ICOSUFFIX).res
+$(MINGW32)windres tmp-testapp$(ICOSUFFIX).rc -O coff -o tmp-testapp32$(ICOSUFFIX).res
+$(MINGW32)gcc $(CFLAGS) -o testapp32$(ICOSUFFIX).exe testapp.c tmp-testapp32$(ICOSUFFIX).res
 endef
 
 testapp64.exe testapp32.exe: testapp.c testapp.ico
@@ -55,15 +62,15 @@ testapp64-with192.exe testapp32-with192.exe: testapp.c testapp-with192.ico
 
 # Build with only version resource
 testapp64-noicon.exe testapp32-noicon.exe: testapp.c
-	$(PREFIX64)windres testapp-base.rc -O coff -o tmp-testapp64-noicon.res
-	$(PREFIX64)gcc $(CFLAGS) -o testapp64-noicon.exe testapp.c tmp-testapp64-noicon.res
-	$(PREFIX32)windres testapp-base.rc -O coff -o tmp-testapp32-noicon.res
-	$(PREFIX32)gcc $(CFLAGS) -o testapp32-noicon.exe testapp.c tmp-testapp32-noicon.res
+	$(MINGW64)windres testapp-base.rc -O coff -o tmp-testapp64-noicon.res
+	$(MINGW64)gcc $(CFLAGS) -o testapp64-noicon.exe testapp.c tmp-testapp64-noicon.res
+	$(MINGW32)windres testapp-base.rc -O coff -o tmp-testapp32-noicon.res
+	$(MINGW32)gcc $(CFLAGS) -o testapp32-noicon.exe testapp.c tmp-testapp32-noicon.res
 
 # Build with no resource info at all
 testapp64-nores.exe testapp32-nores.exe: testapp.c
-	$(PREFIX64)gcc $(CFLAGS) -o testapp64-nores.exe testapp.c
-	$(PREFIX32)gcc $(CFLAGS) -o testapp32-nores.exe testapp.c
+	$(MINGW64)gcc $(CFLAGS) -o testapp64-nores.exe testapp.c
+	$(MINGW32)gcc $(CFLAGS) -o testapp32-nores.exe testapp.c
 
 clean:
-	$(RM) tmp*.* *.ico *.exe
+	$(RM) tmp*.* *.ico *.exe *.o
