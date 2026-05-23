@@ -2,7 +2,29 @@ CFLAGS=-mwindows -g
 MINGW64=x86_64-w64-mingw32-
 MINGW32=i686-w64-mingw32-
 
-.PHONY: all win64 win32 clean
+.PHONY: all win64 win32 win16 clean
+
+WATCOM ?= /opt/watcom
+WCL_EXE := $(shell command -v wcl 2>/dev/null)
+DOCKER_EXE := $(shell command -v docker 2>/dev/null)
+WCL_FLAGS := -k -bt=windows -ml -l=windows
+WRC_FLAGS := -q -bt=windows
+
+# OpenWatcom is not available in most distros. For convenience, this will try a
+# community Docker image if it is not already installed
+ifneq ($(WCL_EXE),)
+    WCL = INCLUDE="$(WATCOM)/h:$(WATCOM)/h/win wcl $(WCL_FLAGS)
+    WRC = wrc $(WRC_FLAGS)
+else ifneq ($(DOCKER_EXE),)
+	OPENWATCOM_DOCKER = docker run --rm \
+		-u "$(shell id -u):$(shell id -g)" \
+		--network none \
+		-v $(CURDIR):/src \
+		-e INCLUDE="$(WATCOM)/h:$(WATCOM)/h/win" \
+		ghcr.io/arlaneenalra/watcom-docker
+    WCL = $(OPENWATCOM_DOCKER) wcl $(WCL_FLAGS)
+	WRC = $(OPENWATCOM_DOCKER) wrc $(WRC_FLAGS)
+endif
 
 win64: testapp64.exe testapp64-nores.exe testapp64-noicon.exe \
 	testapp64-smallonly.exe testapp64-with128.exe testapp64-with192.exe \
@@ -10,6 +32,8 @@ win64: testapp64.exe testapp64-nores.exe testapp64-noicon.exe \
 
 win32: testapp32.exe testapp32-nores.exe testapp32-noicon.exe \
 	testapp32-smallonly.exe testapp32-with128.exe testapp32-with192.exe
+
+win16: testapp16.exe testapp16-nores.exe testapp16-noicon.exe
 
 all: win64 win32
 
@@ -83,5 +107,20 @@ testapp64-nores.exe testapp32-nores.exe: testapp.c
 	$(MINGW64)gcc $(CFLAGS) -o testapp64-nores.exe testapp.c
 	$(MINGW32)gcc $(CFLAGS) -o testapp32-nores.exe testapp.c
 
+testapp16-nores.exe: testapp.c
+	$(WCL) testapp.c -fe=testapp16-nores.exe -fo=testapp16.o
+
+testapp16-noicon.exe: testapp16-nores.exe
+	cp testapp16-nores.exe tmp-testapp16-noicon.exe
+	$(WRC) testapp16-base.rc tmp-testapp16-noicon.exe
+	mv tmp-testapp16-noicon.exe testapp16-noicon.exe
+
+testapp16.exe: testapp16-nores.exe testapp-smallonly.ico
+	cp testapp16-base.rc tmp-testapp16.rc
+	echo 'IDI_APPICON ICON "testapp-smallonly.ico"' >> tmp-testapp16.rc
+	cp testapp16-nores.exe tmp-testapp16.exe
+	$(WRC) tmp-testapp16.rc tmp-testapp16.exe
+	mv tmp-testapp16.exe testapp16.exe
+
 clean:
-	$(RM) tmp*.* *.ico *.exe *.o
+	$(RM) tmp*.* *.ico *.exe *.o *.res

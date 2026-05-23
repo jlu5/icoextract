@@ -1,0 +1,27 @@
+#include <windows.h>
+1 VERSIONINFO
+FILEVERSION 0,1,0,0
+PRODUCTVERSION 0,1,0,0
+FILEOS 0x00010001L      // VOS_DOS_WINDOWS16
+FILETYPE 0x00000001L    // VFT_APP
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904E4" // 04E4 (Windows ANSI)
+        BEGIN
+            VALUE "CompanyName", "The icoextract authors\0"
+            VALUE "FileDescription", "icoextract Test Application (Win16)\0"
+            VALUE "FileVersion", "0.1.0\0"
+            VALUE "InternalName", "testapp16\0"
+            VALUE "ProductName", "icoextract\0"
+            VALUE "OriginalFilename", "testapp16.exe\0"
+            VALUE "ProductVersion", "0.1.0\0"
+        END
+    END
+
+    BLOCK "VarFileInfo"
+    BEGIN
+        // 0x04E4 (Multilingual ANSI)
+        VALUE "Translation", 0x0409, 0x04E4
+    END
+END
