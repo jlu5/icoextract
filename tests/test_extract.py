@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2019-2026 James Lu <james@overdrivenetworks.com>
 
 import filecmp
 import os.path

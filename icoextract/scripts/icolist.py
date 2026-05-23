@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2019-2026 James Lu <james@overdrivenetworks.com>
 """
 Lists group icons present in a program.
 """
+
 import argparse
 import logging
 

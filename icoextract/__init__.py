@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2015-2016 Fadhil Mandaga
+# Copyright (c) 2019-2026 James Lu <james@overdrivenetworks.com>
 """
 Windows Portable Executable (PE) icon extractor.
 

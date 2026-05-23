@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2019-2026 James Lu <james@overdrivenetworks.com>
 """
 Linux (freedesktop.org) thumbnailer for Windows PE files (.exe/.dll)
 """
+
 import argparse
 import logging
 import sys
