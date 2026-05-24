@@ -31,3 +31,5 @@ class GroupIconDir(ctypes.LittleEndianStructure):
         ("Type", WORD),
         ("Count", WORD),
     ]
+
+ExtractedGroupIcon = list[tuple[GroupIconDirEntry, bytes]]

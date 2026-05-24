@@ -19,10 +19,10 @@ import struct
 
 import pefile
 
+from .types import ExtractedGroupIcon, GroupIconDir, GroupIconDirEntry
+
 logger = logging.getLogger("icoextract")
 logging.basicConfig()
-
-from .types import GroupIconDir, GroupIconDirEntry
 
 try:
     from .version import __version__
@@ -119,9 +119,9 @@ class IconExtractor():
             results.append((resource_id, entry.struct.OffsetToData))
         return results
 
-    def _get_icon(
+    def _extract_from_pefile(
         self, resource_dir_entry_data: pefile.ResourceDirEntryData
-    ) -> list[tuple[GroupIconDirEntry, bytes]]:
+    ) -> ExtractedGroupIcon:
         """
         Returns the specified group icon in the binary.
 
@@ -163,10 +163,7 @@ class IconExtractor():
             grp_icon_pairs.append((grp_icon_dir_entry, icon_data))
         return grp_icon_pairs
 
-    def _write_ico(self, fd, index: int = 0, resource_id: int | str | None = None):
-        """
-        Writes ICO data to a file descriptor.
-        """
+    def _extract_icon(self, index: int = 0, resource_id: int | str | None = None):
         if resource_id is not None:
             try:
                 resource_dir_entry_data = self._group_icons_by_id[resource_id]
@@ -178,7 +175,10 @@ class IconExtractor():
             except IndexError:
                 raise IconNotFoundError(f"No icon exists at index {index}") from None
 
-        icons = self._get_icon(resource_dir_entry_data)
+        return self._extract_from_pefile(resource_dir_entry_data)
+
+    def _write_ico(self, fd, icons: ExtractedGroupIcon):
+        """Writes ICO data to a file descriptor."""
         fd.write(b"\x00\x00") # 2 reserved bytes
         fd.write(struct.pack("<H", 1)) # 0x1 (little endian) specifying that this is an .ICO image
         fd.write(struct.pack("<H", len(icons)))  # number of images
@@ -205,8 +205,9 @@ class IconExtractor():
 
         Icons can be selected by index (`num`) or resource ID. By default, the first icon in the binary is exported.
         """
+        group_icon = self._extract_icon(index=num, resource_id=resource_id)
         with open(filename, 'wb') as f:
-            self._write_ico(f, index=num, resource_id=resource_id)
+            self._write_ico(f, group_icon)
 
     def get_icon(self, num: int = 0, resource_id: int | str | None = None) -> io.BytesIO:
         """
@@ -214,8 +215,9 @@ class IconExtractor():
 
         Icons can be selected by index (`num`) or resource ID. By default, the first icon in the binary is exported.
         """
+        group_icon = self._extract_icon(index=num, resource_id=resource_id)
         f = io.BytesIO()
-        self._write_ico(f, index=num, resource_id=resource_id)
+        self._write_ico(f, group_icon)
         return f
 
     @staticmethod
