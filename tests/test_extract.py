@@ -36,7 +36,10 @@ class IconExtractorTestCase(unittest.TestCase):
         for app in ["testapp64.exe", "testapp32.exe"]:
             with self.subTest(app=app):
                 ie = self._test_extract(app, "testapp.ico")
-                self.assertEqual(len(ie.list_group_icons()), 1)
+
+                icon_list = ie.list_group_icons()
+                self.assertEqual(len(icon_list), 1)
+                self.assertEqual(icon_list[0][0], 2)
 
                 # Nonexistent icon index
                 with self.assertRaises(icoextract.IconNotFoundError):
@@ -74,6 +77,25 @@ class IconExtractorTestCase(unittest.TestCase):
         # ID is not an icon
         with self.assertRaises(icoextract.IconNotFoundError):
             self._test_extract("testapp64.exe", resource_id=1)
+
+    def test_extract_icon_id_string(self):
+        """Test extracting an icon with a string resource ID"""
+        # Default index should pick up the icon
+        self._test_extract("testapp64-string-res.exe", "testapp.ico")
+
+        ie = self._test_extract("testapp64-string-res.exe", "testapp.ico",
+                                resource_id="MY_APP_ICON")
+
+        # ID does not exist
+        with self.assertRaises(icoextract.IconNotFoundError):
+            self._test_extract("testapp64.exe", resource_id="nonexistent")
+        with self.assertRaises(icoextract.IconNotFoundError):
+            self._test_extract("testapp64.exe", resource_id=5)
+
+        icon_list = ie.list_group_icons()
+        self.assertEqual(len(icon_list), 1)
+        self.assertEqual(str(icon_list[0][0]), "MY_APP_ICON")
+        self.assertGreater(int(icon_list[0][0]), 0)
 
 if __name__ == '__main__':
     unittest.main()

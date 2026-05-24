@@ -5,7 +5,8 @@ MINGW32=i686-w64-mingw32-
 .PHONY: all win64 win32 clean
 
 win64: testapp64.exe testapp64-nores.exe testapp64-noicon.exe \
-	testapp64-smallonly.exe testapp64-with128.exe testapp64-with192.exe
+	testapp64-smallonly.exe testapp64-with128.exe testapp64-with192.exe \
+	testapp64-string-res.exe
 
 win32: testapp32.exe testapp32-nores.exe testapp32-noicon.exe \
 	testapp32-smallonly.exe testapp32-with128.exe testapp32-with192.exe
@@ -63,6 +64,12 @@ testapp64-with128.exe testapp32-with128.exe: testapp.c testapp-with128.ico
 testapp64-with192.exe testapp32-with192.exe: ICOSUFFIX=-with192
 testapp64-with192.exe testapp32-with192.exe: testapp.c testapp-with192.ico
 	$(build-with-icon)
+
+testapp64-string-res.exe: testapp.c testapp.ico
+	cp testapp-base.rc testapp-string-res.rc
+	echo "MY_APP_ICON ICON testapp.ico" >> tmp-testapp-string-res.rc
+	$(MINGW64)windres tmp-testapp-string-res.rc -O coff -o testapp-string-res.o
+	$(MINGW64)gcc $(CFLAGS) -o testapp64-string-res.exe testapp.c testapp-string-res.o
 
 # Build with only version resource
 testapp64-noicon.exe testapp32-noicon.exe: testapp.c

@@ -7,6 +7,7 @@ Windows Portable Executable (PE) icon extractor.
 
 .. include:: ../LIB-USAGE.md
 """
+from __future__ import annotations
 
 import io
 import logging
@@ -43,6 +44,30 @@ class NoIconsAvailableError(IconExtractorError):
 class InvalidIconDefinitionError(IconExtractorError):
     """Exception raised when the input program has an invalid icon resource."""
 
+class ResourceID(int):
+    """Resource ID wrapper.
+
+    For resources with a string ID, str() will return its string value
+    (e.g. "IDI_MAIN_ICON") and int() will return its underlying numeric ID.
+
+    Numerical icon resource IDs can be accessed via int(), and str() will return
+    the number casted to a string.
+    """
+    def __new__(cls, raw_id: int, name: str | None = None):
+        return super().__new__(cls, raw_id)
+
+    def __init__(self, raw_id: int, name: str | None = None):
+        self.raw_id = raw_id
+        self.name = name
+
+    def __str__(self):
+        return self.name or str(self.raw_id)
+
+    def __repr__(self):
+        if self.name:
+            return f'{self.__class__.__name__}({self.name!r})'
+        return f'{self.__class__.__name__}({self.raw_id})'
+
 class IconExtractor():
     def __init__(self, filename=None, data=None):
         """
@@ -71,29 +96,38 @@ class IconExtractor():
             raise NoIconsAvailableError("File has no group icon resources")
         self._rticonres = resources.get(pefile.RESOURCE_TYPE["RT_ICON"])
 
-        # Populate resources by ID
-        self._group_icons = {entry.struct.Name: idx for idx, entry in enumerate(self._groupiconres.directory.entries)}
+        self._group_icons = self._groupiconres.directory.entries
+        self._group_icons_by_id: dict[int | str, pefile.Structure] = {}
+        for entry in self._group_icons:
+            self._group_icons_by_id[entry.struct.Name] = entry
+            # For resources with a string name, track them by both the string and the underlying
+            # numerical index
+            if entry.name:
+                self._group_icons_by_id[str(entry.name)] = entry
+
         self._icons = {icon_entry_list.id: icon_entry_list.directory.entries[0]  # Select first language
                        for icon_entry_list in self._rticonres.directory.entries}
 
-    def list_group_icons(self) -> list[tuple[int, int]]:
+    def list_group_icons(self) -> list[tuple[ResourceID, int]]:
         """
         Returns all group icon entries as a list of (resource ID, offset) tuples.
         """
-        return [(e.struct.Name, e.struct.OffsetToData)
-                for e in self._groupiconres.directory.entries]
+        results = []
+        for entry in self._group_icons:
+            resource_id = ResourceID(
+                raw_id=entry.struct.Name,
+                name=str(entry.name) if entry.name else None
+            )
+            results.append((resource_id, entry.struct.OffsetToData))
+        return results
 
-    def _get_icon(self, index=0) -> list[tuple[pefile.Structure, bytes]]:
+    def _get_icon(self, groupicon: pefile.Structure) -> list[tuple[pefile.Structure, bytes]]:
         """
         Returns the specified group icon in the binary.
 
-        Result is a list of (group icon structure, icon data) tuples.
+        Result is a list of (group icon dir entry, icon data) tuples.
         """
-        try:
-            groupicon = self._groupiconres.directory.entries[index]
-        except IndexError:
-            raise IconNotFoundError(f"No icon exists at index {index}") from None
-        resource_id = groupicon.struct.Name
+        resource_id = groupicon.name or groupicon.id
         icon_lang = None
         if groupicon.struct.DataIsDirectory:
             # Select the first language from subfolders as needed.
@@ -107,9 +141,9 @@ class IconExtractor():
         file_offset = self._pe.get_offset_from_rva(rva)
 
         grp_icon_dir = self._pe.__unpack_data__(GRPICONDIR_FORMAT, grp_icon_data, file_offset)
-        logger.debug("Group icon %d has ID %s and %d images: %s",
+        logger.debug("Group icon has ID %s(%s) and %d images: %s",
                      # pylint: disable=no-member
-                     index, resource_id, grp_icon_dir.Count, grp_icon_dir)
+                     resource_id, hex(groupicon.struct.Name), grp_icon_dir.Count, grp_icon_dir)
 
         # pylint: disable=no-member
         if grp_icon_dir.Reserved:
@@ -119,31 +153,36 @@ class IconExtractor():
 
         # For each group icon entry (GRPICONDIRENTRY) that immediately follows, read the struct and look up the
         # corresponding icon image
-        grp_icons = []
+        grp_icon_pairs = []
         icon_offset = grp_icon_dir.sizeof()
         for grp_icon_index in range(grp_icon_dir.Count):
-            grp_icon = self._pe.__unpack_data__(
+            grp_icon_dir_entry = self._pe.__unpack_data__(
                 GRPICONDIRENTRY_FORMAT, grp_icon_data[icon_offset:], file_offset+icon_offset)
-            icon_offset += grp_icon.sizeof()
-            logger.debug("Got group icon entry %d: %s", grp_icon_index, grp_icon)
+            icon_offset += grp_icon_dir_entry.sizeof()
+            logger.debug("Got group icon entry %d: %s", grp_icon_index, grp_icon_dir_entry)
 
-            icon_entry = self._icons[grp_icon.ID]
+            icon_entry = self._icons[grp_icon_dir_entry.ID]
             icon_data = self._pe.get_data(icon_entry.data.struct.OffsetToData, icon_entry.data.struct.Size)
-            logger.debug("Got icon data for ID %d: %s", grp_icon.ID, icon_entry.data.struct)
-            grp_icons.append((grp_icon, icon_data))
-        return grp_icons
+            logger.debug("Got icon data for ID %d: %s", grp_icon_dir_entry.ID, icon_entry.data.struct)
+            grp_icon_pairs.append((grp_icon_dir_entry, icon_data))
+        return grp_icon_pairs
 
-    def _write_ico(self, fd, num=0, resource_id=None):
+    def _write_ico(self, fd, index: int = 0, resource_id: int | str | None = None):
         """
         Writes ICO data to a file descriptor.
         """
         if resource_id is not None:
             try:
-                num = self._group_icons[resource_id]
+                group_icon = self._group_icons_by_id[resource_id]
             except KeyError:
-                raise IconNotFoundError(f"No icon exists with resource ID {resource_id}") from None
+                raise IconNotFoundError(f"No icon exists with resource ID {resource_id!r}") from None
+        else:
+            try:
+                group_icon = self._group_icons[index]
+            except IndexError:
+                raise IconNotFoundError(f"No icon exists at index {index}") from None
 
-        icons = self._get_icon(index=num)
+        icons = self._get_icon(group_icon)
         fd.write(b"\x00\x00") # 2 reserved bytes
         fd.write(struct.pack("<H", 1)) # 0x1 (little endian) specifying that this is an .ICO image
         fd.write(struct.pack("<H", len(icons)))  # number of images
@@ -164,23 +203,23 @@ class IconExtractor():
             group_icon, icon_data = datapair
             fd.write(icon_data)
 
-    def export_icon(self, filename, num=0, resource_id=None):
+    def export_icon(self, filename: str, num: int = 0, resource_id: int | str | None = None) -> None:
         """
         Exports ICO data for the requested group icon to `filename`.
 
         Icons can be selected by index (`num`) or resource ID. By default, the first icon in the binary is exported.
         """
         with open(filename, 'wb') as f:
-            self._write_ico(f, num=num, resource_id=resource_id)
+            self._write_ico(f, index=num, resource_id=resource_id)
 
-    def get_icon(self, num=0, resource_id=None) -> io.BytesIO:
+    def get_icon(self, num: int = 0, resource_id: int | str | None = None) -> io.BytesIO:
         """
         Exports ICO data for the requested group icon as a `io.BytesIO` instance.
 
         Icons can be selected by index (`num`) or resource ID. By default, the first icon in the binary is exported.
         """
         f = io.BytesIO()
-        self._write_ico(f, num=num, resource_id=resource_id)
+        self._write_ico(f, index=num, resource_id=resource_id)
         return f
 
     @staticmethod
