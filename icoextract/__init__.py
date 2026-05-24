@@ -9,6 +9,7 @@ Windows Portable Executable (PE) icon extractor.
 """
 from __future__ import annotations
 
+import ctypes
 import io
 import logging
 import os
@@ -18,13 +19,10 @@ import struct
 
 import pefile
 
-GRPICONDIRENTRY_FORMAT = ('GRPICONDIRENTRY',
-    ('B,Width', 'B,Height','B,ColorCount','B,Reserved',
-     'H,Planes','H,BitCount','I,BytesInRes','H,ID'))
-GRPICONDIR_FORMAT = ('GRPICONDIR', ('H,Reserved', 'H,Type','H,Count'))
-
 logger = logging.getLogger("icoextract")
 logging.basicConfig()
+
+from .types import GroupIconDir, GroupIconDirEntry
 
 try:
     from .version import __version__
@@ -121,7 +119,7 @@ class IconExtractor():
             results.append((resource_id, entry.struct.OffsetToData))
         return results
 
-    def _get_icon(self, groupicon: pefile.Structure) -> list[tuple[pefile.Structure, bytes]]:
+    def _get_icon(self, groupicon: pefile.Structure) -> list[tuple[GroupIconDirEntry, bytes]]:
         """
         Returns the specified group icon in the binary.
 
@@ -138,12 +136,10 @@ class IconExtractor():
         # Read the data pointed to by the group icon directory (GRPICONDIR) struct.
         rva = groupicon.data.struct.OffsetToData
         grp_icon_data = self._pe.get_data(rva, groupicon.data.struct.Size)
-        file_offset = self._pe.get_offset_from_rva(rva)
 
-        grp_icon_dir = self._pe.__unpack_data__(GRPICONDIR_FORMAT, grp_icon_data, file_offset)
-        logger.debug("Group icon has ID %s(%s) and %d images: %s",
-                     # pylint: disable=no-member
-                     resource_id, hex(groupicon.struct.Name), grp_icon_dir.Count, grp_icon_dir)
+        grp_icon_dir = GroupIconDir.from_buffer_copy(grp_icon_data)
+        logger.debug("Group icon has %d images: %s",
+                     grp_icon_dir.Count, grp_icon_dir)
 
         # pylint: disable=no-member
         if grp_icon_dir.Reserved:
@@ -154,11 +150,10 @@ class IconExtractor():
         # For each group icon entry (GRPICONDIRENTRY) that immediately follows, read the struct and look up the
         # corresponding icon image
         grp_icon_pairs = []
-        icon_offset = grp_icon_dir.sizeof()
+        icon_offset = ctypes.sizeof(grp_icon_dir)
         for grp_icon_index in range(grp_icon_dir.Count):
-            grp_icon_dir_entry = self._pe.__unpack_data__(
-                GRPICONDIRENTRY_FORMAT, grp_icon_data[icon_offset:], file_offset+icon_offset)
-            icon_offset += grp_icon_dir_entry.sizeof()
+            grp_icon_dir_entry = GroupIconDirEntry.from_buffer_copy(grp_icon_data, icon_offset)
+            icon_offset += ctypes.sizeof(grp_icon_dir_entry)
             logger.debug("Got group icon entry %d: %s", grp_icon_index, grp_icon_dir_entry)
 
             icon_entry = self._icons[grp_icon_dir_entry.ID]
@@ -192,9 +187,9 @@ class IconExtractor():
         for datapair in icons:
             group_icon, icon_data = datapair
             # Elements in ICONDIRENTRY and GRPICONDIRENTRY are all the same
-            # except the last value, which is an ID in GRPICONDIRENTRY and
-            # the offset from the beginning of the file in ICONDIRENTRY.
-            fd.write(group_icon.__pack__()[:12])
+            # except the last value, which is a 2 byte ID in GRPICONDIRENTRY and
+            # the 4 byte offset from the beginning of the file in ICONDIRENTRY.
+            fd.write(bytes(group_icon)[:12])
             fd.write(struct.pack("<I", dataoffset))
             dataoffset += len(icon_data)  # Increase offset for next image
 
