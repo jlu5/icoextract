@@ -2,7 +2,7 @@ CFLAGS=-mwindows -g
 MINGW64=x86_64-w64-mingw32-
 MINGW32=i686-w64-mingw32-
 
-.PHONY: all win64 win32 bmps clean
+.PHONY: all win64 win32 clean
 
 win64: testapp64.exe testapp64-nores.exe testapp64-noicon.exe \
 	testapp64-smallonly.exe testapp64-with128.exe testapp64-with192.exe
@@ -12,21 +12,25 @@ win32: testapp32.exe testapp32-nores.exe testapp32-noicon.exe \
 
 all: win64 win32
 
-bmps: testapp.png
+tmp-testapp-16.bmp: testapp.png
 	convert testapp.png -resize 16x16 tmp-testapp-16.bmp
+
+tmp-testapp-32.bmp: testapp.png
 	convert testapp.png -resize 32x32 tmp-testapp-32.bmp
+
+tmp-testapp-48.bmp: testapp.png
 	convert testapp.png -resize 48x48 tmp-testapp-48.bmp
 
 # icon with standard sizes: 16x16, 32x32, 48x48, 256x256
-testapp.ico: testapp.png bmps
+testapp.ico: testapp.png tmp-testapp-16.bmp tmp-testapp-32.bmp tmp-testapp-48.bmp
 	convert testapp.png tmp-testapp*.bmp testapp.ico
 
 # Small icon (only up to 48x48)
-testapp-smallonly.ico: testapp.png bmps
+testapp-smallonly.ico: testapp.png tmp-testapp-16.bmp tmp-testapp-32.bmp tmp-testapp-48.bmp
 	convert tmp-testapp-*.bmp testapp-smallonly.ico
 
 # All standard sizes + 128x128
-testapp-with128.ico: testapp.png bmps
+testapp-with128.ico: testapp.png tmp-testapp-16.bmp tmp-testapp-32.bmp tmp-testapp-48.bmp
 	convert testapp.png -resize 128x128 tmp-testapp-128.png
 	convert testapp.png tmp-testapp*.bmp tmp-testapp*.png testapp-with128.ico
 
@@ -37,7 +41,7 @@ testapp-with192.ico: testapp-with128.ico
 
 # Build with icon + version resource
 define build-with-icon =
-cat testapp-base.rc > tmp-testapp$(ICOSUFFIX).rc
+cp testapp-base.rc tmp-testapp$(ICOSUFFIX).rc
 echo "2 ICON testapp$(ICOSUFFIX).ico" >> tmp-testapp$(ICOSUFFIX).rc
 $(MINGW64)windres tmp-testapp$(ICOSUFFIX).rc -O coff -o tmp-testapp64$(ICOSUFFIX).o
 $(MINGW64)gcc $(CFLAGS) -o testapp64$(ICOSUFFIX).exe testapp.c tmp-testapp64$(ICOSUFFIX).o
