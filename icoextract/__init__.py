@@ -9,17 +9,26 @@ Windows Portable Executable (PE) icon extractor.
 """
 from __future__ import annotations
 
-import ctypes
-import io
+from contextlib import ExitStack
+import enum
 import logging
-import os
-import pathlib
-import platform
-import struct
+import mmap
 
-import pefile
-
-from .types import ExtractedGroupIcon, GroupIconDir, GroupIconDirEntry
+from .base_extractor import BaseIconExtractor
+from .exceptions import (
+    IconExtractorError,
+    IconNotFoundError,
+    NoIconsAvailableError,
+    InvalidIconDefinitionError,
+    UnknownExecutableError,
+)
+from .pe_extractor import PEIconExtractor
+from .types import (
+    ExtractedGroupIcon,
+    GroupIconDir,
+    GroupIconDirEntry,
+    ResourceID,
+)
 
 logger = logging.getLogger("icoextract")
 logging.basicConfig()
@@ -30,215 +39,62 @@ except ImportError:
     __version__ = 'unknown'
     logger.info('icoextract: failed to read program version')
 
-class IconExtractorError(Exception):
-    """Superclass for exceptions raised by IconExtractor."""
-
-class IconNotFoundError(IconExtractorError):
-    """Exception raised when extracting an icon index or resource ID that does not exist."""
-
-class NoIconsAvailableError(IconExtractorError):
-    """Exception raised when the input program has no icon resources."""
-
-class InvalidIconDefinitionError(IconExtractorError):
-    """Exception raised when the input program has an invalid icon resource."""
-
-class ResourceID(int):
-    """Resource ID wrapper.
-
-    For resources with a string ID, str() will return its string value
-    (e.g. "IDI_MAIN_ICON") and int() will return its underlying numeric ID.
-
-    Numerical icon resource IDs can be accessed via int(), and str() will return
-    the number casted to a string.
-    """
-    def __new__(cls, raw_id: int, name: str | None = None):
-        return super().__new__(cls, raw_id)
-
-    def __init__(self, raw_id: int, name: str | None = None):
-        self.raw_id = raw_id
-        self.name = name
-
-    def __str__(self):
-        return self.name or str(self.raw_id)
-
-    def __repr__(self):
-        if self.name:
-            return f'{self.__class__.__name__}({self.name!r})'
-        return f'{self.__class__.__name__}({self.raw_id})'
-
-class IconExtractor():
-    def __init__(self, filename=None, data=None):
-        """
-        Loads an executable from the given `filename` or `data` (raw bytes).
-        As with pefile, if both `filename` and `data` are given, `filename` takes precedence.
-
-        If the executable has contains no icons, this will raise `NoIconsAvailableError`.
-        """
-        # Use fast loading and explicitly load the RESOURCE directory entry. This saves a LOT of time
-        # on larger files
-        self._pe = pefile.PE(name=filename, data=data, fast_load=True)
-        self._pe.parse_data_directories(pefile.DIRECTORY_ENTRY['IMAGE_DIRECTORY_ENTRY_RESOURCE'])
-
-        if not hasattr(self._pe, 'DIRECTORY_ENTRY_RESOURCE'):
-            raise NoIconsAvailableError("File has no resources")
-
-        # Reverse the list of entries before making the mapping so that earlier values take precedence
-        # When an executable includes multiple icon resources, we should use only the first one.
-        # pylint: disable=no-member
-        resources = {rsrc.id: rsrc for rsrc in reversed(self._pe.DIRECTORY_ENTRY_RESOURCE.entries)}
-
-        self._groupiconres = resources.get(pefile.RESOURCE_TYPE["RT_GROUP_ICON"])
-        if not self._groupiconres:
-            if filename and platform.system() == "Windows":
-                self._print_windows_usage_hint(filename)
-            raise NoIconsAvailableError("File has no group icon resources")
-        self._rticonres = resources.get(pefile.RESOURCE_TYPE["RT_ICON"])
-
-        self._group_icons = self._groupiconres.directory.entries
-        self._group_icons_by_id: dict[int | str, pefile.ResourceDirEntryData] = {}
-        for entry in self._group_icons:
-            self._group_icons_by_id[entry.struct.Name] = entry
-            # For resources with a string name, track them by both the string and the underlying
-            # numerical index
-            if entry.name:
-                self._group_icons_by_id[str(entry.name)] = entry
-
-        self._icons = {icon_entry_list.id: icon_entry_list.directory.entries[0]  # Select first language
-                       for icon_entry_list in self._rticonres.directory.entries}
-
-    def list_group_icons(self) -> list[tuple[ResourceID, int]]:
-        """
-        Returns all group icon entries as a list of (resource ID, offset) tuples.
-        """
-        results = []
-        for entry in self._group_icons:
-            resource_id = ResourceID(
-                raw_id=entry.struct.Name,
-                name=str(entry.name) if entry.name else None
-            )
-            results.append((resource_id, entry.struct.OffsetToData))
-        return results
-
-    def _extract_from_pefile(
-        self, resource_dir_entry_data: pefile.ResourceDirEntryData
-    ) -> ExtractedGroupIcon:
-        """
-        Returns the specified group icon in the binary.
-
-        Result is a list of (group icon dir entry, icon data) tuples.
-        """
-        icon_lang = None
-        if resource_dir_entry_data.struct.DataIsDirectory:
-            # Select the first language from subfolders as needed.
-            resource_dir_entry_data = resource_dir_entry_data.directory.entries[0]
-            icon_lang = resource_dir_entry_data.struct.Name
-            logger.debug("Picking first language %s", icon_lang)
-
-        # Read the data pointed to by the group icon directory (GRPICONDIR) struct.
-        rva = resource_dir_entry_data.data.struct.OffsetToData
-        grp_icon_data = self._pe.get_data(rva, resource_dir_entry_data.data.struct.Size)
-
-        grp_icon_dir = GroupIconDir.from_buffer_copy(grp_icon_data)
-        logger.debug("Group icon has %d images: %s",
-                     grp_icon_dir.Count, grp_icon_dir)
-
-        # pylint: disable=no-member
-        if grp_icon_dir.Reserved:
-            # pylint: disable=no-member
-            raise InvalidIconDefinitionError("Invalid group icon definition (got Reserved=%s instead of 0)"
-                % hex(grp_icon_dir.Reserved))
-
-        # For each group icon entry (GRPICONDIRENTRY) that immediately follows, read the struct and look up the
-        # corresponding icon image
-        grp_icon_pairs = []
-        icon_offset = ctypes.sizeof(grp_icon_dir)
-        for grp_icon_index in range(grp_icon_dir.Count):
-            grp_icon_dir_entry = GroupIconDirEntry.from_buffer_copy(grp_icon_data, icon_offset)
-            icon_offset += ctypes.sizeof(grp_icon_dir_entry)
-            logger.debug("Got group icon entry %d: %s", grp_icon_index, grp_icon_dir_entry)
-
-            icon_entry = self._icons[grp_icon_dir_entry.ID]
-            icon_data = self._pe.get_data(icon_entry.data.struct.OffsetToData, icon_entry.data.struct.Size)
-            logger.debug("Got icon data for ID %d: %s", grp_icon_dir_entry.ID, icon_entry.data.struct)
-            grp_icon_pairs.append((grp_icon_dir_entry, icon_data))
-        return grp_icon_pairs
-
-    def _extract_icon(self, index: int = 0, resource_id: int | str | None = None):
-        if resource_id is not None:
-            try:
-                resource_dir_entry_data = self._group_icons_by_id[resource_id]
-            except KeyError:
-                raise IconNotFoundError(f"No icon exists with resource ID {resource_id!r}") from None
-        else:
-            try:
-                resource_dir_entry_data = self._group_icons[index]
-            except IndexError:
-                raise IconNotFoundError(f"No icon exists at index {index}") from None
-
-        return self._extract_from_pefile(resource_dir_entry_data)
-
-    def _write_ico(self, fd, icons: ExtractedGroupIcon):
-        """Writes ICO data to a file descriptor."""
-        fd.write(b"\x00\x00") # 2 reserved bytes
-        fd.write(struct.pack("<H", 1)) # 0x1 (little endian) specifying that this is an .ICO image
-        fd.write(struct.pack("<H", len(icons)))  # number of images
-
-        dataoffset = 6 + (len(icons) * 16)
-        # First pass: write the icon dir entries
-        for datapair in icons:
-            group_icon, icon_data = datapair
-            # Elements in ICONDIRENTRY and GRPICONDIRENTRY are all the same
-            # except the last value, which is a 2 byte ID in GRPICONDIRENTRY and
-            # the 4 byte offset from the beginning of the file in ICONDIRENTRY.
-            fd.write(bytes(group_icon)[:12])
-            fd.write(struct.pack("<I", dataoffset))
-            dataoffset += len(icon_data)  # Increase offset for next image
-
-        # Second pass: write the icon data
-        for datapair in icons:
-            group_icon, icon_data = datapair
-            fd.write(icon_data)
-
-    def export_icon(self, filename: str, num: int = 0, resource_id: int | str | None = None) -> None:
-        """
-        Exports ICO data for the requested group icon to `filename`.
-
-        Icons can be selected by index (`num`) or resource ID. By default, the first icon in the binary is exported.
-        """
-        group_icon = self._extract_icon(index=num, resource_id=resource_id)
-        with open(filename, 'wb') as f:
-            self._write_ico(f, group_icon)
-
-    def get_icon(self, num: int = 0, resource_id: int | str | None = None) -> io.BytesIO:
-        """
-        Exports ICO data for the requested group icon as a `io.BytesIO` instance.
-
-        Icons can be selected by index (`num`) or resource ID. By default, the first icon in the binary is exported.
-        """
-        group_icon = self._extract_icon(index=num, resource_id=resource_id)
-        f = io.BytesIO()
-        self._write_ico(f, group_icon)
-        return f
-
-    @staticmethod
-    def _print_windows_usage_hint(filename):
-        path = pathlib.Path(filename)
-        systemroot = pathlib.Path(os.getenv('SYSTEMROOT'))
-        if path.is_relative_to(systemroot / 'System32') or \
-                path.is_relative_to(systemroot / 'SysWOW64'):
-            mun_path = pathlib.Path(systemroot / 'SystemResources' / (path.name + '.mun'))
-            if mun_path.is_file():
-                logger.warning(
-                    'System DLL files in Windows 10 1903+ no longer contain icons. '
-                    'Try extracting from %s instead.', mun_path)
-
 __all__ = [
     'IconExtractor',
     'IconExtractorError',
     'IconNotFoundError',
     'NoIconsAvailableError',
     'InvalidIconDefinitionError',
+    'UnknownExecutableError',
+    'ExtractedGroupIcon',
+    'GroupIconDir',
+    'GroupIconDirEntry',
+    'ResourceID',
 ]
+
+class ExecutableType(enum.Enum):
+    AUTO = 0
+    PE = 1
+    NE = 2
+
+def detect_executable_type(buf: bytearray | mmap.mmap) -> ExecutableType:
+    if buf[:2] != b'MZ':
+        raise UnknownExecutableError("Unknown executable type (no MZ header)")
+
+    # Get the offset to the real header (located at 0x3C)
+    e_lfanew = int.from_bytes(buf[0x3C:0x40], byteorder='little')
+    signature = buf[e_lfanew:e_lfanew+4]
+
+    if signature.startswith(b'PE\x00\x00'):
+        return ExecutableType.PE
+    if signature.startswith(b'NE'):
+        return ExecutableType.NE
+    raise UnknownExecutableError("Unknown / unsupported executable type")
+
+def IconExtractor(filename: str | None = None,
+                  data: bytearray | mmap.mmap | None = None,
+                  exe_type: ExecutableType = ExecutableType.AUTO) -> BaseIconExtractor:
+    """IconExtractor factory function."""
+    if filename is None and data is None:
+        raise ValueError("filename and data cannot both be None")
+
+    if exe_type == ExecutableType.AUTO:
+        if data is not None:
+            exe_type = detect_executable_type(data)
+        else:
+            assert filename
+            with ExitStack() as stack:
+                f = stack.enter_context(open(filename, 'rb'))
+                mm = stack.enter_context(mmap.mmap(f.fileno(), 0, access=mmap.ACCESS_READ))
+                exe_type = detect_executable_type(mm)
+        logger.debug("Detected executable type as %s", exe_type)
+
+    if exe_type == ExecutableType.PE:
+        return PEIconExtractor(filename, data)
+    if exe_type == ExecutableType.NE:
+        raise UnknownExecutableError("NE files are not supported yet")
+
+    raise UnknownExecutableError("Unknown executable type")
 
 __pdoc__ = {
     'scripts': False,
