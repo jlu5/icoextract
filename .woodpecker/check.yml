@@ -13,5 +13,5 @@ when:
 
 matrix:
   PYTHON_VERSION:
-    - 3.9
+    - 3.10
     - 3.14
