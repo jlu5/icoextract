@@ -95,7 +95,7 @@ class IconExtractor():
         self._rticonres = resources.get(pefile.RESOURCE_TYPE["RT_ICON"])
 
         self._group_icons = self._groupiconres.directory.entries
-        self._group_icons_by_id: dict[int | str, pefile.Structure] = {}
+        self._group_icons_by_id: dict[int | str, pefile.ResourceDirEntryData] = {}
         for entry in self._group_icons:
             self._group_icons_by_id[entry.struct.Name] = entry
             # For resources with a string name, track them by both the string and the underlying
@@ -119,23 +119,24 @@ class IconExtractor():
             results.append((resource_id, entry.struct.OffsetToData))
         return results
 
-    def _get_icon(self, groupicon: pefile.Structure) -> list[tuple[GroupIconDirEntry, bytes]]:
+    def _get_icon(
+        self, resource_dir_entry_data: pefile.ResourceDirEntryData
+    ) -> list[tuple[GroupIconDirEntry, bytes]]:
         """
         Returns the specified group icon in the binary.
 
         Result is a list of (group icon dir entry, icon data) tuples.
         """
-        resource_id = groupicon.name or groupicon.id
         icon_lang = None
-        if groupicon.struct.DataIsDirectory:
+        if resource_dir_entry_data.struct.DataIsDirectory:
             # Select the first language from subfolders as needed.
-            groupicon = groupicon.directory.entries[0]
-            icon_lang = groupicon.struct.Name
+            resource_dir_entry_data = resource_dir_entry_data.directory.entries[0]
+            icon_lang = resource_dir_entry_data.struct.Name
             logger.debug("Picking first language %s", icon_lang)
 
         # Read the data pointed to by the group icon directory (GRPICONDIR) struct.
-        rva = groupicon.data.struct.OffsetToData
-        grp_icon_data = self._pe.get_data(rva, groupicon.data.struct.Size)
+        rva = resource_dir_entry_data.data.struct.OffsetToData
+        grp_icon_data = self._pe.get_data(rva, resource_dir_entry_data.data.struct.Size)
 
         grp_icon_dir = GroupIconDir.from_buffer_copy(grp_icon_data)
         logger.debug("Group icon has %d images: %s",
@@ -168,16 +169,16 @@ class IconExtractor():
         """
         if resource_id is not None:
             try:
-                group_icon = self._group_icons_by_id[resource_id]
+                resource_dir_entry_data = self._group_icons_by_id[resource_id]
             except KeyError:
                 raise IconNotFoundError(f"No icon exists with resource ID {resource_id!r}") from None
         else:
             try:
-                group_icon = self._group_icons[index]
+                resource_dir_entry_data = self._group_icons[index]
             except IndexError:
                 raise IconNotFoundError(f"No icon exists at index {index}") from None
 
-        icons = self._get_icon(group_icon)
+        icons = self._get_icon(resource_dir_entry_data)
         fd.write(b"\x00\x00") # 2 reserved bytes
         fd.write(struct.pack("<H", 1)) # 0x1 (little endian) specifying that this is an .ICO image
         fd.write(struct.pack("<H", len(icons)))  # number of images
