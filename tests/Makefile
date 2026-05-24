@@ -39,10 +39,10 @@ testapp-with192.ico: testapp-with128.ico
 define build-with-icon =
 cat testapp-base.rc > tmp-testapp$(ICOSUFFIX).rc
 echo "2 ICON testapp$(ICOSUFFIX).ico" >> tmp-testapp$(ICOSUFFIX).rc
-$(MINGW64)windres tmp-testapp$(ICOSUFFIX).rc -O coff -o tmp-testapp64$(ICOSUFFIX).res
-$(MINGW64)gcc $(CFLAGS) -o testapp64$(ICOSUFFIX).exe testapp.c tmp-testapp64$(ICOSUFFIX).res
-$(MINGW32)windres tmp-testapp$(ICOSUFFIX).rc -O coff -o tmp-testapp32$(ICOSUFFIX).res
-$(MINGW32)gcc $(CFLAGS) -o testapp32$(ICOSUFFIX).exe testapp.c tmp-testapp32$(ICOSUFFIX).res
+$(MINGW64)windres tmp-testapp$(ICOSUFFIX).rc -O coff -o tmp-testapp64$(ICOSUFFIX).o
+$(MINGW64)gcc $(CFLAGS) -o testapp64$(ICOSUFFIX).exe testapp.c tmp-testapp64$(ICOSUFFIX).o
+$(MINGW32)windres tmp-testapp$(ICOSUFFIX).rc -O coff -o tmp-testapp32$(ICOSUFFIX).o
+$(MINGW32)gcc $(CFLAGS) -o testapp32$(ICOSUFFIX).exe testapp.c tmp-testapp32$(ICOSUFFIX).o
 endef
 
 testapp64.exe testapp32.exe: testapp.c testapp.ico
@@ -62,10 +62,10 @@ testapp64-with192.exe testapp32-with192.exe: testapp.c testapp-with192.ico
 
 # Build with only version resource
 testapp64-noicon.exe testapp32-noicon.exe: testapp.c
-	$(MINGW64)windres testapp-base.rc -O coff -o tmp-testapp64-noicon.res
-	$(MINGW64)gcc $(CFLAGS) -o testapp64-noicon.exe testapp.c tmp-testapp64-noicon.res
-	$(MINGW32)windres testapp-base.rc -O coff -o tmp-testapp32-noicon.res
-	$(MINGW32)gcc $(CFLAGS) -o testapp32-noicon.exe testapp.c tmp-testapp32-noicon.res
+	$(MINGW64)windres testapp-base.rc -O coff -o tmp-testapp64-noicon.o
+	$(MINGW64)gcc $(CFLAGS) -o testapp64-noicon.exe testapp.c tmp-testapp64-noicon.o
+	$(MINGW32)windres testapp-base.rc -O coff -o tmp-testapp32-noicon.o
+	$(MINGW32)gcc $(CFLAGS) -o testapp32-noicon.exe testapp.c tmp-testapp32-noicon.o
 
 # Build with no resource info at all
 testapp64-nores.exe testapp32-nores.exe: testapp.c
