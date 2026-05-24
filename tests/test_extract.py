@@ -37,13 +37,30 @@ class IconExtractorTestCase(unittest.TestCase):
             with self.subTest(app=app):
                 ie = self._test_extract(app, "testapp.ico")
 
-                icon_list = ie.list_group_icons()
-                self.assertEqual(len(icon_list), 1)
-                self.assertEqual(icon_list[0][0], 2)
-
                 # Nonexistent icon index
                 with self.assertRaises(icoextract.IconNotFoundError):
                     self._test_extract(app, num=10)
+
+    def test_list(self):
+        """Test list_group_icons() behaviour"""
+        for app in ["testapp64.exe", "testapp32.exe"]:
+            with self.subTest(app=app):
+                tests_dir = os.path.dirname(__file__)
+                inpath = os.path.join(tests_dir, app)
+                ie = icoextract.IconExtractor(inpath)
+
+                icon_list = ie.list_group_icons()
+                self.assertEqual(len(icon_list), 1)
+                resource_id, grp_icons_with_offsets = icon_list[0]
+                self.assertEqual(resource_id, 2)  # ID
+                self.assertEqual(len(grp_icons_with_offsets), 4)  # number of icons
+                expected_sizes = [(0, 0), (16, 16), (32, 32), (48, 48)]
+                real_sizes = [
+                    (grp_icons_dir_entry.Width, grp_icons_dir_entry.Height)
+                    for (grp_icons_dir_entry, resource_offset, file_offset)
+                    in grp_icons_with_offsets
+                ]
+                self.assertCountEqual(expected_sizes, real_sizes)
 
     def test_no_icon_resource(self):
         """Test that NoIconsAvailableError is raised when the input binary has

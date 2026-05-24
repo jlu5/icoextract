@@ -6,7 +6,7 @@ import abc
 import io
 import struct
 
-from .types import ExtractedGroupIcon, ResourceID
+from .types import ExtractedGroupIcon, GroupIconWithIconOffsets, ResourceID
 
 class BaseIconExtractor(abc.ABC):
     """Base icon extractor class containing frontend and .ico writing logic."""
@@ -16,9 +16,9 @@ class BaseIconExtractor(abc.ABC):
         """Extract an icon by its index or resource ID."""
 
     @abc.abstractmethod
-    def list_group_icons(self) -> list[tuple[ResourceID, int]]:
+    def list_group_icons(self) -> list[tuple[ResourceID, GroupIconWithIconOffsets]]:
         """
-        Returns all group icon entries as a list of (resource ID, offset) tuples.
+        Returns all group icon entries as a list of (resource ID, group icon dir entry) tuples.
         """
 
     def _write_ico(self, fd, icons: ExtractedGroupIcon):

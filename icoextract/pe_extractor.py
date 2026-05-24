@@ -3,7 +3,6 @@
 # Copyright (c) 2015-2016 Fadhil Mandaga
 # Copyright (c) 2019-2026 James Lu <james@overdrivenetworks.com>
 
-
 import ctypes
 import logging
 import os
@@ -22,6 +21,7 @@ from .types import (
     ExtractedGroupIcon,
     GroupIconDir,
     GroupIconDirEntry,
+    GroupIconWithIconOffsets,
     ResourceID,
 )
 
@@ -30,8 +30,8 @@ logger = logging.getLogger("icoextract")
 class PEIconExtractor(BaseIconExtractor):
     def __init__(self, filename=None, data=None):
         """
-        Loads an executable from the given `filename` or `data` (raw bytes).
-        As with pefile, if both `filename` and `data` are given, `filename` takes precedence.
+        Loads an Win32/Win64 Portable Executable from the given `filename` or `data` (raw buffer).
+        If both `filename` and `data` are given, `filename` takes precedence.
 
         If the executable has contains no icons, this will raise `NoIconsAvailableError`.
         """
@@ -67,22 +67,29 @@ class PEIconExtractor(BaseIconExtractor):
         self._icons = {icon_entry_list.id: icon_entry_list.directory.entries[0]  # Select first language
                        for icon_entry_list in self._rticonres.directory.entries}
 
-    def list_group_icons(self) -> list[tuple[ResourceID, int]]:
-        """
-        Returns all group icon entries as a list of (resource ID, offset) tuples.
-        """
+    def list_group_icons(self) -> list[tuple[ResourceID, GroupIconWithIconOffsets]]:
         results = []
         for entry in self._group_icons:
             resource_id = ResourceID(
                 raw_id=entry.struct.Name,
                 name=str(entry.name) if entry.name else None
             )
-            results.append((resource_id, entry.struct.OffsetToData))
+            grp_icon_resource = self._group_icons_by_id[entry.struct.Name]
+            grp_icon_data_full = self._extract_from_pefile(grp_icon_resource, skip_data=True)
+            # Return only the metadata and offsets
+            grp_icon_data = [
+                (grp_icon_dir_entry, resource_offset, file_offset)
+                for (grp_icon_dir_entry, _, resource_offset, file_offset)
+                in grp_icon_data_full
+            ]
+            results.append((resource_id, grp_icon_data))
         return results
 
     def _extract_from_pefile(
-        self, resource_dir_entry_data: pefile.ResourceDirEntryData
-    ) -> ExtractedGroupIcon:
+        self,
+        resource_dir_entry_data: pefile.ResourceDirEntryData,
+        skip_data: bool = False,
+    ) -> list[tuple[GroupIconDirEntry, bytes, int, int]]:
         """
         Returns the specified group icon in the binary.
 
@@ -111,7 +118,7 @@ class PEIconExtractor(BaseIconExtractor):
 
         # For each group icon entry (GRPICONDIRENTRY) that immediately follows, read the struct and look up the
         # corresponding icon image
-        grp_icon_pairs = []
+        extracted_grp_icons = []
         icon_offset = ctypes.sizeof(grp_icon_dir)
         for grp_icon_index in range(grp_icon_dir.Count):
             grp_icon_dir_entry = GroupIconDirEntry.from_buffer_copy(grp_icon_data, icon_offset)
@@ -119,12 +126,17 @@ class PEIconExtractor(BaseIconExtractor):
             logger.debug("Got group icon entry %d: %s", grp_icon_index, grp_icon_dir_entry)
 
             icon_entry = self._icons[grp_icon_dir_entry.ID]
-            icon_data = self._pe.get_data(icon_entry.data.struct.OffsetToData, icon_entry.data.struct.Size)
             logger.debug("Got icon data for ID %d: %s", grp_icon_dir_entry.ID, icon_entry.data.struct)
-            grp_icon_pairs.append((grp_icon_dir_entry, icon_data))
-        return grp_icon_pairs
 
-    def _extract_icon(self, index: int = 0, resource_id: int | str | None = None):
+            icon_res_offset = icon_entry.data.struct.OffsetToData
+            icon_file_offset = self._pe.get_offset_from_rva(icon_res_offset)
+            icon_data = b''
+            if not skip_data:
+                icon_data = self._pe.get_data(icon_res_offset, icon_entry.data.struct.Size)
+            extracted_grp_icons.append((grp_icon_dir_entry, icon_data, icon_res_offset, icon_file_offset))
+        return extracted_grp_icons
+
+    def _extract_icon(self, index: int = 0, resource_id: int | str | None = None) -> ExtractedGroupIcon:
         if resource_id is not None:
             try:
                 resource_dir_entry_data = self._group_icons_by_id[resource_id]
@@ -136,7 +148,12 @@ class PEIconExtractor(BaseIconExtractor):
             except IndexError:
                 raise IconNotFoundError(f"No icon exists at index {index}") from None
 
-        return self._extract_from_pefile(resource_dir_entry_data)
+        # Return only the GroupIconDirEntry metadata and icon bytes
+        return [
+            (grp_icon_dir_entry, icon_data)
+            for (grp_icon_dir_entry, icon_data, _, _)
+            in self._extract_from_pefile(resource_dir_entry_data)
+        ]
 
     @staticmethod
     def _print_windows_usage_hint(filename):

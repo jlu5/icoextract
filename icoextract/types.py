@@ -57,3 +57,4 @@ class GroupIconDir(ctypes.LittleEndianStructure):
     ]
 
 ExtractedGroupIcon = list[tuple[GroupIconDirEntry, bytes]]
+GroupIconWithIconOffsets = list[tuple[GroupIconDirEntry, int, int]]

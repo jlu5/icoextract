@@ -22,7 +22,15 @@ def main():
 
     extractor = IconExtractor(args.input)
     for idx, entry in enumerate(extractor.list_group_icons()):
-        eid, offset = entry
-        print(f"Index: {idx}    "
+        eid, grp_icon_dir_entries = entry
+        print(f"Group Icon Index: {idx}    "
               f"ID: {eid}({hex(eid)})    "
-              f"Offset: {hex(offset)}")
+              f"Count: {len(grp_icon_dir_entries)}")
+        for (grp_icon_dir_entry, resource_offset, file_offset) in grp_icon_dir_entries:
+            print(f"    Icon ID: {grp_icon_dir_entry.ID}"
+                  # Width and Height are u8 values where 0 means 256
+                  f"    Width: {grp_icon_dir_entry.Width or 256}"
+                  f"    Height: {grp_icon_dir_entry.Height or 256}"
+                  f"    Resource Offset: {hex(resource_offset)}"
+                  f"    File Offset: {hex(file_offset)}"
+                  f"    Size: {grp_icon_dir_entry.BytesInRes}")
