@@ -7,7 +7,6 @@ Windows Portable Executable (PE) icon extractor.
 
 .. include:: ../LIB-USAGE.md
 """
-from __future__ import annotations
 
 from contextlib import ExitStack
 import enum

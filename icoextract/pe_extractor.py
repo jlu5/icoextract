@@ -3,7 +3,6 @@
 # Copyright (c) 2015-2016 Fadhil Mandaga
 # Copyright (c) 2019-2026 James Lu <james@overdrivenetworks.com>
 
-from __future__ import annotations
 
 import ctypes
 import logging
