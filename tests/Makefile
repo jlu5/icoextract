@@ -90,7 +90,7 @@ testapp64-with192.exe testapp32-with192.exe: testapp.c testapp-with192.ico
 	$(build-with-icon)
 
 testapp64-string-res.exe: testapp.c testapp.ico
-	cp testapp-base.rc testapp-string-res.rc
+	cp testapp-base.rc tmp-testapp-string-res.rc
 	echo "MY_APP_ICON ICON testapp.ico" >> tmp-testapp-string-res.rc
 	$(MINGW64)windres tmp-testapp-string-res.rc -O coff -o testapp-string-res.o
 	$(MINGW64)gcc $(CFLAGS) -o testapp64-string-res.exe testapp.c testapp-string-res.o
