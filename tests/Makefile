@@ -26,16 +26,17 @@ else ifneq ($(DOCKER_EXE),)
 	WRC = $(OPENWATCOM_DOCKER) wrc $(WRC_FLAGS)
 endif
 
+# Win16 is excluded by default as it requires a different compiler
+all: win64 win32
+
 win64: testapp64.exe testapp64-nores.exe testapp64-noicon.exe \
-	testapp64-smallonly.exe testapp64-with128.exe testapp64-with192.exe \
+	testapp64-with128.exe testapp64-with192.exe \
 	testapp64-string-res.exe
 
 win32: testapp32.exe testapp32-nores.exe testapp32-noicon.exe \
-	testapp32-smallonly.exe testapp32-with128.exe testapp32-with192.exe
+	testapp32-smallonly.exe
 
 win16: testapp16.exe testapp16-nores.exe testapp16-noicon.exe
-
-all: win64 win32
 
 tmp-testapp-16.bmp: testapp.png
 	convert testapp.png -resize 16x16 tmp-testapp-16.bmp
@@ -64,49 +65,59 @@ testapp-with192.ico: testapp-with128.ico
 	convert testapp.png -resize 192x192 tmp-testapp-192.png
 	convert tmp-testapp*.bmp tmp-testapp-128.png tmp-testapp-192.png testapp-with192.ico
 
-# Build with icon + version resource
-define build-with-icon =
-cp testapp-base.rc tmp-testapp$(ICOSUFFIX).rc
-echo "2 ICON testapp$(ICOSUFFIX).ico" >> tmp-testapp$(ICOSUFFIX).rc
-$(MINGW64)windres tmp-testapp$(ICOSUFFIX).rc -O coff -o tmp-testapp64$(ICOSUFFIX).o
-$(MINGW64)gcc $(CFLAGS) -o testapp64$(ICOSUFFIX).exe testapp.c tmp-testapp64$(ICOSUFFIX).o
-$(MINGW32)windres tmp-testapp$(ICOSUFFIX).rc -O coff -o tmp-testapp32$(ICOSUFFIX).o
-$(MINGW32)gcc $(CFLAGS) -o testapp32$(ICOSUFFIX).exe testapp.c tmp-testapp32$(ICOSUFFIX).o
+# $(1) = Toolchain prefix
+# $(2) = Base output name (e.g., testapp64-with128)
+define build-mingw-target =
+    $(1)windres tmp-$(2).rc -O coff -o $(2).o
+    $(1)gcc $(CFLAGS) -o $(2).exe testapp.c $(2).o
+endef
+
+# Build with (optional) icon + version resource
+# $(1) = architecture (64, 32, or empty for both)
+# $(2) = resource ID (defaults to 2)
+define build-testapp =
+    $(eval ICON_FILE := $(filter %.ico,$^))
+	$(eval APP_NAME := $(basename $@))
+	$(eval RC_NAME := tmp-$(APP_NAME).rc)
+
+    cp testapp-base.rc $(RC_NAME)
+	$(if $(ICON_FILE), \
+        echo "$(if $(2),$(2),2) ICON $(ICON_FILE)" >> $(RC_NAME) \
+    )
+
+    $(if $(filter 64 $(1),$(if $(1),$(1),64)), \
+        $(call build-mingw-target,$(MINGW64),$(APP_NAME)) \
+    )
+    $(if $(filter 32 $(1),$(if $(1),$(1),32)), \
+        $(call build-mingw-target,$(MINGW32),$(APP_NAME)) \
+    )
 endef
 
 testapp64.exe testapp32.exe: testapp.c testapp.ico
-	$(build-with-icon)
+	$(call build-testapp,,)
 
-testapp64-smallonly.exe testapp32-smallonly.exe: ICOSUFFIX=-smallonly
-testapp64-smallonly.exe testapp32-smallonly.exe: testapp.c testapp-smallonly.ico
-	$(build-with-icon)
+testapp32-smallonly.exe: testapp.c testapp-smallonly.ico
+	$(call build-testapp,32,)
 
-testapp64-with128.exe testapp32-with128.exe: ICOSUFFIX=-with128
-testapp64-with128.exe testapp32-with128.exe: testapp.c testapp-with128.ico
-	$(build-with-icon)
+testapp64-with128.exe: testapp.c testapp-with128.ico
+	$(call build-testapp,64,)
 
-testapp64-with192.exe testapp32-with192.exe: ICOSUFFIX=-with192
-testapp64-with192.exe testapp32-with192.exe: testapp.c testapp-with192.ico
-	$(build-with-icon)
+testapp64-with192.exe: testapp.c testapp-with192.ico
+	$(call build-testapp,64,)
 
 testapp64-string-res.exe: testapp.c testapp.ico
-	cp testapp-base.rc tmp-testapp-string-res.rc
-	echo "MY_APP_ICON ICON testapp.ico" >> tmp-testapp-string-res.rc
-	$(MINGW64)windres tmp-testapp-string-res.rc -O coff -o testapp-string-res.o
-	$(MINGW64)gcc $(CFLAGS) -o testapp64-string-res.exe testapp.c testapp-string-res.o
+	$(call build-testapp,32,MY_APP_ICON)
 
 # Build with only version resource
 testapp64-noicon.exe testapp32-noicon.exe: testapp.c
-	$(MINGW64)windres testapp-base.rc -O coff -o tmp-testapp64-noicon.o
-	$(MINGW64)gcc $(CFLAGS) -o testapp64-noicon.exe testapp.c tmp-testapp64-noicon.o
-	$(MINGW32)windres testapp-base.rc -O coff -o tmp-testapp32-noicon.o
-	$(MINGW32)gcc $(CFLAGS) -o testapp32-noicon.exe testapp.c tmp-testapp32-noicon.o
+	$(call build-testapp,,)
 
 # Build with no resource info at all
 testapp64-nores.exe testapp32-nores.exe: testapp.c
 	$(MINGW64)gcc $(CFLAGS) -o testapp64-nores.exe testapp.c
 	$(MINGW32)gcc $(CFLAGS) -o testapp32-nores.exe testapp.c
 
+## Win16
 testapp16-nores.exe: testapp.c
 	$(WCL) testapp.c -fe=testapp16-nores.exe -fo=testapp16.o
 
