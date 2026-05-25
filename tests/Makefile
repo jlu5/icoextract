@@ -13,8 +13,8 @@ WRC_FLAGS := -q -bt=windows
 # OpenWatcom is not available in most distros. For convenience, this will try a
 # community Docker image if it is not already installed
 ifneq ($(WCL_EXE),)
-    WCL = INCLUDE="$(WATCOM)/h:$(WATCOM)/h/win wcl $(WCL_FLAGS)
-    WRC = wrc $(WRC_FLAGS)
+    WCL = INCLUDE="$(WATCOM)/h:$(WATCOM)/h/win" wcl $(WCL_FLAGS)
+    WRC = INCLUDE="$(WATCOM)/h:$(WATCOM)/h/win" wrc $(WRC_FLAGS)
 else ifneq ($(DOCKER_EXE),)
 	OPENWATCOM_DOCKER = docker run --rm \
 		-u "$(shell id -u):$(shell id -g)" \

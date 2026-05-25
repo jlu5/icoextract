@@ -1,12 +1,18 @@
 steps:
-  - commands:
-      - pip install .[thumbnailer]
+  - name: Compile Win16 binaries
+    image: ghcr.io/arlaneenalra/watcom-docker
+    commands:
+      - apk add --no-cache imagemagick
+      - cd tests && make win16
+
+  - name: Run integration tests
+    image: python:${PYTHON_VERSION}
+    commands:
+      - pip install .[thumbnailer,win16]
       - apt-get update
       - apt-get install -yy imagemagick gcc-mingw-w64 make
       - cd tests && make
       - python3 -m unittest discover . --verbose
-    image: python:${PYTHON_VERSION}
-    name: Run integration tests
 
 when:
   event: [tag, push, pull_request]
