@@ -21,6 +21,7 @@ from .exceptions import (
     InvalidIconDefinitionError,
     UnknownExecutableError,
 )
+from .ne_extractor import NEIconExtractor
 from .pe_extractor import PEIconExtractor
 from .types import (
     ExtractedGroupIcon,
@@ -91,7 +92,7 @@ def IconExtractor(filename: str | None = None,
     if exe_type == ExecutableType.PE:
         return PEIconExtractor(filename, data)
     if exe_type == ExecutableType.NE:
-        raise UnknownExecutableError("NE files are not supported yet")
+        return NEIconExtractor(filename, data)
 
     raise UnknownExecutableError("Unknown executable type")
 

@@ -36,7 +36,8 @@ setup(
     packages=find_packages(exclude=['tests']),
     install_requires=['pefile'],
     extras_require={
-        "thumbnailer": ["Pillow"]
+        "thumbnailer": ["Pillow"],
+        "win16": ["nefile"]
     },
 
     # Executable scripts
