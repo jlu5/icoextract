@@ -11,7 +11,7 @@ import sys
 
 from PIL import Image
 
-from icoextract import IconExtractor, logger, __version__
+from icoextract import IconExtractor, IconExtractorError, logger, __version__
 
 def generate_thumbnail(inputfile, outfile, size=256, force_resize=False):
     """
@@ -67,4 +67,8 @@ def main():
     if args.verbose:
         logger.setLevel(logging.DEBUG)
 
-    generate_thumbnail(args.inputfile, args.outfile, size=args.size, force_resize=args.force_resize)
+    try:
+        generate_thumbnail(args.inputfile, args.outfile, size=args.size, force_resize=args.force_resize)
+    except IconExtractorError as e:
+        logger.error("Failed to thumbnail %s: %s", args.inputfile, e)
+        logger.debug("Backtrace:", exc_info=True)
