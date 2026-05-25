@@ -109,5 +109,17 @@ class ThumbnailerTestCase(unittest.TestCase):
             self.assertEqual(im.height, 128)
             self._compare_equal(im, "tmp-testapp-128.png")
 
+    def test_color_depth_sort(self):
+        """
+        Test that exe-thumbnailer prefers outputting the icon with the highest
+        bit depth if there are multiple images with the same size.
+        """
+        outfile = self._generate_thumbnail("testapp32-bpp.exe", "tmp-thumbnail-test-bpp.png")
+        with Image.open(outfile) as im:
+            self.assertEqual(im.width, 32)
+            self.assertEqual(im.height, 32)
+            rgb_img = im.convert("RGB")  # The input file has no transparency
+            self._compare_equal(rgb_img, "bmp-color.bmp")
+
 if __name__ == '__main__':
     unittest.main()

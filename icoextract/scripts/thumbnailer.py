@@ -50,8 +50,16 @@ def generate_thumbnail(inputfile, outfile, size=256, force_resize=False):
             elif im.size > (128, 128):
                 logger.debug("Downsizing icon to 128x128")
                 im = im.resize((128, 128))
-        logger.debug("Writing size %s thumbnail for %s to %s", size, inputfile, outfile)
 
+    # For legacy apps, try to export the icon with the highest size & bit depth
+    # Some programs (e.g. Internet Explorer 6) put a 16 color icon earlier in the file
+    if im.size <= (48, 48):
+        ico_frames = list(enumerate(im.ico.entry))
+        best_frame_idx, ico_header = max(ico_frames, key=lambda pair: (pair[1].square, pair[1].color_depth))
+        logger.debug("Legacy app: selecting icon %s", ico_header)
+        im = im.ico.frame(best_frame_idx)
+
+    logger.debug("Writing size %s thumbnail for %s to %s", size, inputfile, outfile)
     im.save(outfile, "PNG")
 
 def main():

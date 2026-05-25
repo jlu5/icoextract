@@ -34,7 +34,7 @@ win64: testapp64.exe testapp64-nores.exe testapp64-noicon.exe \
 	testapp64-string-res.exe
 
 win32: testapp32.exe testapp32-nores.exe testapp32-noicon.exe \
-	testapp32-smallonly.exe
+	testapp32-smallonly.exe testapp32-bpp.exe
 
 win16: testapp16.exe testapp16-nores.exe testapp16-noicon.exe
 
@@ -117,6 +117,13 @@ testapp64-nores.exe testapp32-nores.exe: testapp.c
 	$(MINGW64)gcc $(CFLAGS) -o testapp64-nores.exe testapp.c
 	$(MINGW32)gcc $(CFLAGS) -o testapp32-nores.exe testapp.c
 
+## BPP tests (monochrome et al.)
+testapp-bpp.ico: bmp-monochrome.bmp bmp-color.bmp
+	convert bmp-monochrome.bmp bmp-color.bmp testapp-bpp.ico
+
+testapp32-bpp.exe: testapp-bpp.ico testapp.c
+	$(call build-testapp,32,3)
+
 ## Win16
 testapp16-nores.exe: testapp.c
 	$(WCL) testapp.c -fe=testapp16-nores.exe -fo=testapp16.o
@@ -126,9 +133,9 @@ testapp16-noicon.exe: testapp16-nores.exe
 	$(WRC) testapp16-base.rc tmp-testapp16-noicon.exe
 	mv tmp-testapp16-noicon.exe testapp16-noicon.exe
 
-testapp16.exe: testapp16-nores.exe testapp-smallonly.ico
+testapp16.exe: testapp16-nores.exe testapp-bpp.ico
 	cp testapp16-base.rc tmp-testapp16.rc
-	echo 'IDI_APPICON ICON "testapp-smallonly.ico"' >> tmp-testapp16.rc
+	echo 'IDI_APPICON ICON "testapp-bpp.ico"' >> tmp-testapp16.rc
 	cp testapp16-nores.exe tmp-testapp16.exe
 	$(WRC) tmp-testapp16.rc tmp-testapp16.exe
 	mv tmp-testapp16.exe testapp16.exe
