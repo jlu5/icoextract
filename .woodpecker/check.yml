@@ -6,11 +6,10 @@ steps:
       - cd tests && make win16
 
   - name: Run integration tests
-    image: python:${PYTHON_VERSION}
+    image: python:${PYTHON_VERSION}-alpine
     commands:
+      - apk add --no-cache imagemagick make mingw-w64-gcc i686-mingw-w64-gcc
       - pip install .[thumbnailer,win16]
-      - apt-get update
-      - apt-get install -yy imagemagick gcc-mingw-w64 make
       - cd tests && make
       - python3 -m unittest discover . --verbose
 
