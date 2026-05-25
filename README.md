@@ -1,6 +1,6 @@
 # icoextract
 
-[![Build Status](https://drone.overdrivenetworks.com/api/badges/jlu5/icoextract/status.svg)](https://drone.overdrivenetworks.com/jlu5/icoextract)
+[![Build Status](https://woodpecker.overdrivenetworks.com/api/badges/5/status.svg)](https://woodpecker.overdrivenetworks.com/repos/5)
 
 **icoextract** is an icon extractor for Windows PE files (.exe/.dll/.mun), written in Python. It also includes a thumbnailer script (`exe-thumbnailer`) for Linux desktops.
 
