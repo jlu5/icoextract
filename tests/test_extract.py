@@ -52,7 +52,7 @@ class IconExtractorTestCase(unittest.TestCase):
                 icon_list = ie.list_group_icons()
                 self.assertEqual(len(icon_list), 1)
                 resource_id, grp_icons_with_offsets = icon_list[0]
-                self.assertEqual(resource_id, 2)  # ID
+                self.assertEqual(int(resource_id), 2)  # ID
                 self.assertEqual(len(grp_icons_with_offsets), 4)  # number of icons
                 expected_sizes = [(0, 0), (16, 16), (32, 32), (48, 48)]
                 real_sizes = [
