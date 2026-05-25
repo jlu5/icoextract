@@ -5,8 +5,9 @@
 import os.path
 import unittest
 
+from PIL import Image, ImageChops
+
 from icoextract.scripts.thumbnailer import generate_thumbnail
-from PIL import Image
 
 TESTS_DIR = os.path.dirname(__file__)
 COMPARE_LENGTH = 1024  # for efficiency
@@ -20,8 +21,10 @@ class ThumbnailerTestCase(unittest.TestCase):
 
     def _compare_equal(self, im, orig):
         with Image.open(os.path.join(TESTS_DIR, orig)) as im_orig:
-            self.assertEqual(list(im.getdata())[:COMPARE_LENGTH], list(im_orig.getdata())[:COMPARE_LENGTH],
-                                "Extracted image should match original")
+            self.assertEqual(im.size, im_orig.size, "Images are not the same size")
+            self.assertEqual(im.mode, im_orig.mode, "Images are not the same size")
+            diff = ImageChops.difference(im, im_orig)
+            self.assertIsNone(diff.getbbox(), "Diff should be empty")
 
     def test_thumbnailer_normal(self):
         outfile = self._generate_thumbnail("testapp64.exe", "tmp-thumbnail-test-normal.png", size=128)
@@ -90,7 +93,7 @@ class ThumbnailerTestCase(unittest.TestCase):
 
     def test_unsupported_output_size_too_small(self):
         """Test an invalid requested icon size (< 128)"""
-        outfile = self._generate_thumbnail("testapp64.exe", "tmp-thumbnail-test-unsupported-size-too-small.png",
+        outfile = self._generate_thumbnail("testapp64-with128.exe", "tmp-thumbnail-test-unsupported-size-too-small.png",
         size=64)
         with Image.open(outfile) as im:
             self.assertEqual(im.width, 128)
@@ -99,7 +102,7 @@ class ThumbnailerTestCase(unittest.TestCase):
 
     def test_unsupported_output_size_between(self):
         """Test an invalid requested icon size (> 128, < 256)"""
-        outfile = self._generate_thumbnail("testapp64.exe", "tmp-thumbnail-test-unsupported-size-between.png",
+        outfile = self._generate_thumbnail("testapp64-with128.exe", "tmp-thumbnail-test-unsupported-size-between.png",
         size=200)
         with Image.open(outfile) as im:
             self.assertEqual(im.width, 128)
