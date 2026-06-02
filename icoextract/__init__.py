@@ -40,9 +40,11 @@ __all__ = [
     'NoIconsAvailableError',
     'InvalidIconDefinitionError',
     'UnknownExecutableError',
+    'ExecutableType',
 ]
 
 class ExecutableType(enum.Enum):
+    """Enum for supported executable formats."""
     AUTO = 0
     PE = 1
     NE = 2
