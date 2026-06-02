@@ -1,6 +1,7 @@
 # icoextract
 
 [![Build Status](https://woodpecker.overdrivenetworks.com/api/badges/5/status.svg)](https://woodpecker.overdrivenetworks.com/repos/5)
+[![Packaging status](https://repology.org/badge/tiny-repos/icoextract.svg)](https://repology.org/project/icoextract/versions)
 
 **icoextract** is an icon extractor for Windows PE files (.exe/.dll/.mun), written in Python. It also includes a thumbnailer script (`exe-thumbnailer`) for Linux desktops.
 
@@ -13,6 +14,12 @@ icoextract aims to be:
 - Fast on large files
 
 ## Installation
+
+### Dependencies
+
+- [pefile](https://github.com/erocarrera/pefile)
+- [Pillow](https://pillow.readthedocs.io/en/stable/) - optional, for exe-thumbnailer
+- [nefile](https://github.com/npjg/nefile) - optional, for Win16 / NE EXE support
 
 ### Installing from source
 
@@ -29,7 +36,8 @@ The thumbnailer should work with any file manager that implements the [Freedeskt
 
 You can install icoextract from any of these distribution repositories:
 
-[![Packaging status](https://repology.org/badge/vertical-allrepos/icoextract.svg)](https://repology.org/project/icoextract/versions)
+[![Packaging status](https://repology.org/badge/vertical-allrepos/icoextract.svg?columns=5)](https://repology.org/project/icoextract/versions)
+
 
 ## Usage
 
