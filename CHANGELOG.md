@@ -1,5 +1,18 @@
 # Changelog
 
+## icoextract 0.3.0 (TBD)
+
+- Add support for Win16 NE EXEs via the nefile module (optional dependency)
+- Add support for string resource IDs in addition to integers (previously string IDs were always read as raw numbers)
+- `icolist` is now more verbose and shows each icon's image info (dimensions, size, and offsets)
+- `exe_thumbnailer` now prefers icons with higher bit depths. In practice, this mostly affects older programs like
+  Internet Explorer 6 and Windows 3.x system apps.
+- **Notes for developers**:
+  - `icoextract.IconExtractor()` is now a factory function instead of a class. By default it will autoselect the
+    `IconExtractor` type based on the input executable format - this can be overridden using the `exe_type` parameter.
+  - `list_group_icons()` now returns `(resource ID, group icon dir entry)` tuples instead of a simple ID and offset pair.
+    - ResourceID is now a class type with `int()` and `str()` conversions, as these IDs can be either a string or a number.
+
 ## icoextract 0.2.0 (2025-06-02)
 
 - Add `-i/--id` option to extract icons by resource ID
