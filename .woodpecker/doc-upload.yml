@@ -1,8 +1,8 @@
 steps:
   - commands:
-      - pip install . pdoc3 awscli
-      - pdoc --html icoextract --template-dir pdoc/templates
-      - aws s3 cp html/icoextract/index.html s3://jlu5-ci-doc/icoextract.html
+      - pip install .[dev] awscli
+      - pdoc --no-show-source -o ./html/ icoextract/*.py '!icoextract.version'
+      - aws s3 cp html/ s3://jlu5-ci-doc/ --recursive
     image: python:3.14
     name: Upload API docs
     environment:

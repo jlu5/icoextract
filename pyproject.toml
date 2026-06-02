@@ -37,7 +37,7 @@ win16 = ["nefile"]
 dev = [
     "icoextract[thumbnailer]",
     "icoextract[win16]",
-    "pdoc3",
+    "pdoc",
 ]
 
 [project.scripts]
