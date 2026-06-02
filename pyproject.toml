@@ -1,0 +1,50 @@
+[build-system]
+requires = ["setuptools>=61.0.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "icoextract"
+description = "Windows EXE icon extractor"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [
+    { name = "James Lu", email = "james@overdrivenetworks.com" }
+]
+license = { text = "MIT/Expat" }
+classifiers = [
+    'Development Status :: 4 - Beta',
+    'Intended Audience :: Developers',
+    'Intended Audience :: End Users/Desktop',
+    'Topic :: Software Development :: Libraries :: Python Modules',
+    'License :: OSI Approved :: MIT License',
+    'Operating System :: OS Independent',
+    'Operating System :: POSIX',
+    'Programming Language :: Python :: 3 :: Only',
+    'Programming Language :: Python :: 3.10',
+    'Programming Language :: Python :: 3.11',
+    'Programming Language :: Python :: 3.12',
+    'Programming Language :: Python :: 3.13',
+    'Programming Language :: Python :: 3.14',
+]
+dependencies = [
+    "pefile",
+]
+dynamic = ["version"]
+
+[project.optional-dependencies]
+thumbnailer = ["Pillow"]
+win16 = ["nefile"]
+
+[project.scripts]
+icoextract = "icoextract.scripts.extract:main"
+icolist = "icoextract.scripts.icolist:main"
+exe-thumbnailer = "icoextract.scripts.thumbnailer:main [thumbnailer]"
+
+[tool.setuptools]
+license-files = ["LICENSE"]
+
+[tool.setuptools.packages.find]
+exclude = ["tests"]
+
+[tool.setuptools.dynamic]
+version = { attr = "icoextract.version.__version__" }
