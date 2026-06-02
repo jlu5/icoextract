@@ -34,6 +34,11 @@ dynamic = ["version"]
 [project.optional-dependencies]
 thumbnailer = ["Pillow"]
 win16 = ["nefile"]
+dev = [
+    "icoextract[thumbnailer]",
+    "icoextract[win16]",
+    "pdoc3",
+]
 
 [project.scripts]
 icoextract = "icoextract.scripts.extract:main"
