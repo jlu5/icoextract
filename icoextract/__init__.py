@@ -23,12 +23,6 @@ from .exceptions import (
 )
 from .ne_extractor import NEIconExtractor
 from .pe_extractor import PEIconExtractor
-from .types import (
-    ExtractedGroupIcon,
-    GroupIconDir,
-    GroupIconDirEntry,
-    ResourceID,
-)
 
 logger = logging.getLogger("icoextract")
 logging.basicConfig()
@@ -46,10 +40,6 @@ __all__ = [
     'NoIconsAvailableError',
     'InvalidIconDefinitionError',
     'UnknownExecutableError',
-    'ExtractedGroupIcon',
-    'GroupIconDir',
-    'GroupIconDirEntry',
-    'ResourceID',
 ]
 
 class ExecutableType(enum.Enum):
