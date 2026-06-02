@@ -13,7 +13,9 @@ steps:
       AWS_ENDPOINT_URL_S3: https://s3.us-west-000.backblazeb2.com
 
 when:
-  event: [tag]
+  - event: tag
+  - event: push
+    branch: wip/doc-*
 
 depends_on:
 - check
