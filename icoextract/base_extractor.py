@@ -9,7 +9,7 @@ import struct
 from .types import ExtractedGroupIcon, GroupIconWithIconOffsets, ResourceID
 
 class BaseIconExtractor(abc.ABC):
-    """Base icon extractor class containing frontend and .ico writing logic."""
+    """Base icon extractor class containing .ico writing logic."""
 
     @abc.abstractmethod
     def _extract_icon(self, index: int = 0, resource_id: int | str | None = None) -> ExtractedGroupIcon:

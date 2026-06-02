@@ -24,6 +24,8 @@ from .types import (
 logger = logging.getLogger("icoextract")
 
 class NEIconExtractor(BaseIconExtractor):
+    """Win16 New Executable (NE) icon extractor."""
+
     def __init__(self, filename=None, data=None):
         """
         Loads an Win16 New Executable from the given `filename` or `data` (raw buffer).

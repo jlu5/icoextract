@@ -2,8 +2,12 @@
 # SPDX-License-Identifier: MIT
 # Copyright (c) 2019-2026 James Lu <james@overdrivenetworks.com>
 
-# See https://devblogs.microsoft.com/oldnewthing/20120720-00/?p=7083
-# for a reference on these structures
+"""
+icoextract common types.
+
+See https://devblogs.microsoft.com/oldnewthing/20120720-00/?p=7083
+for a reference on ICO structures.
+"""
 
 import ctypes
 
@@ -40,6 +44,7 @@ class ResourceID:
         return f'{self.__class__.__name__}({self.raw_id})'
 
 class GroupIconDirEntry(ctypes.LittleEndianStructure):
+    """ICO GRPICONDIRENTRY / RESDIR structure"""
     _pack_ = 1  # Ensures tight packing (no padding)
     _fields_ = [
         ("Width", BYTE),
@@ -53,6 +58,7 @@ class GroupIconDirEntry(ctypes.LittleEndianStructure):
     ]
 
 class GroupIconDir(ctypes.LittleEndianStructure):
+    """ICO GRPICONDIR / NEWHEADER structure"""
     _pack_ = 1
     _fields_ = [
         ("Reserved", WORD),

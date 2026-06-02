@@ -3,7 +3,7 @@
 # Copyright (c) 2015-2016 Fadhil Mandaga
 # Copyright (c) 2019-2026 James Lu <james@overdrivenetworks.com>
 """
-Windows Portable Executable (PE) icon extractor.
+Windows executable icon extractor.
 
 .. include:: ../LIB-USAGE.md
 """
@@ -66,7 +66,13 @@ def detect_executable_type(buf: bytearray | mmap.mmap) -> ExecutableType:
 def IconExtractor(filename: str | None = None,
                   data: bytearray | mmap.mmap | None = None,
                   exe_type: ExecutableType = ExecutableType.AUTO) -> BaseIconExtractor:
-    """IconExtractor factory function."""
+    """
+    IconExtractor factory function.
+
+    When `exe_type` is set to *AUTO*, this will return an `icoextract.pe_extractor.PEIconExtractor`
+    for Win32/Win64 PE executables and an `icoextract.ne_extractor.NEIconExtractor` for Win16 NE
+    executables.
+    """
     if filename is None and data is None:
         raise ValueError("filename and data cannot both be None")
 

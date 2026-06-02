@@ -28,6 +28,8 @@ from .types import (
 logger = logging.getLogger("icoextract")
 
 class PEIconExtractor(BaseIconExtractor):
+    """Win32/Win64 Portable Executable (PE) icon extractor."""
+
     def __init__(self, filename=None, data=None):
         """
         Loads an Win32/Win64 Portable Executable from the given `filename` or `data` (raw buffer).
