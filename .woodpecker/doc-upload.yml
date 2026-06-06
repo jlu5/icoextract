@@ -1,7 +1,15 @@
+clone:
+  git:
+    image: woodpeckerci/plugin-git
+    settings:
+      # Fetch the full history so that `git describe --tags` is not empty
+      depth: 0
+      tags: true
+
 steps:
   - commands:
       - pip install .[dev] awscli
-      - pdoc --no-show-source -o ./html/ icoextract/*.py '!icoextract.version'
+      - pdoc --no-show-source -o ./html/ icoextract/*.py '!icoextract.version' --footer-text "icoextract $(git describe --tags)"
       - aws s3 cp html/ s3://jlu5-ci-doc/ --recursive
     image: python:3.14
     name: Upload API docs
