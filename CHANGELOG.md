@@ -1,6 +1,6 @@
 # Changelog
 
-## icoextract 0.3.0 (TBD)
+## icoextract 0.3.0 (2026-06-06)
 
 - Add support for Win16 NE EXEs via the nefile module (optional dependency)
 - Add support for string resource IDs in addition to integers (previously string IDs were always read as raw numbers)
