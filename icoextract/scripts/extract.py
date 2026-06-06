@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MIT
 # Copyright (c) 2019-2026 James Lu <james@overdrivenetworks.com>
 """
-Windows PE EXE icon extractor.
+Windows executable icon extractor.
 """
 
 import argparse

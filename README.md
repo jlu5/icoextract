@@ -3,7 +3,7 @@
 [![Build Status](https://woodpecker.overdrivenetworks.com/api/badges/5/status.svg)](https://woodpecker.overdrivenetworks.com/repos/5)
 [![Packaging status](https://repology.org/badge/tiny-repos/icoextract.svg)](https://repology.org/project/icoextract/versions)
 
-**icoextract** is an icon extractor for Windows PE files (.exe/.dll/.mun), written in Python. It also includes a thumbnailer script (`exe-thumbnailer`) for Linux desktops.
+**icoextract** is an icon extractor library for Windows executables (.exe/.dll/.mun). It also includes a thumbnailer script (`exe-thumbnailer`) for Linux desktops.
 
 This project is inspired by [extract-icon-py](https://github.com/firodj/extract-icon-py), [icoutils](https://www.nongnu.org/icoutils/), and others.
 
@@ -17,6 +17,7 @@ icoextract aims to be:
 
 ### Dependencies
 
+- Python 3.10+
 - [pefile](https://github.com/erocarrera/pefile)
 - [Pillow](https://pillow.readthedocs.io/en/stable/) - optional, for exe-thumbnailer
 - [nefile](https://github.com/npjg/nefile) - optional, for Win16 / NE EXE support
@@ -50,7 +51,7 @@ For API docs, see https://projects.jlu5.com/icoextract.html
 ```
 usage: icoextract [-h] [-V] [-n NUM] [-i ID] [-v] input output
 
-Windows PE EXE icon extractor.
+Windows executable icon extractor.
 
 positional arguments:
   input          input filename (.exe/.dll/.mun)
