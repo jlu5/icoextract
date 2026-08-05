@@ -46,7 +46,7 @@ icolist = "icoextract.scripts.icolist:main"
 exe-thumbnailer = "icoextract.scripts.thumbnailer:main [thumbnailer]"
 
 [tool.setuptools.packages.find]
-exclude = ["tests"]
+include = ["icoextract", "icoextract.*"]
 
 [tool.setuptools.dynamic]
 version = { attr = "icoextract.version.__version__" }
