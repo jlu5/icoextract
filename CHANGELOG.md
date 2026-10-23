@@ -1,5 +1,10 @@
 # Changelog
 
+## icoextract 0.3.1 (2026-10-22)
+
+- Packaging: fix setuptools configuration to only install `icoextract/`
+  - This should fix build issues in multi-Python version setups.
+
 ## icoextract 0.3.0 (2026-06-06)
 
 - Add support for Win16 NE EXEs via the nefile module (optional dependency)
