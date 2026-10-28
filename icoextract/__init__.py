@@ -3,9 +3,9 @@
 # Copyright (c) 2015-2016 Fadhil Mandaga
 # Copyright (c) 2019-2026 James Lu <james@overdrivenetworks.com>
 """
-Windows executable icon extractor.
-
-.. include:: ../LIB-USAGE.md
+.. include:: ../README.md
+   :start-after: -->
+   :end-before: <!-- END
 """
 
 from contextlib import ExitStack
